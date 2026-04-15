@@ -324,7 +324,7 @@ def calc_stats(df):
     }
 
 def calc_streak(pdf):
-    if pdf.empty: return 0, 0, None, None
+    if pdf.empty: return 0, 0, 0, None, None
     sorted_df = pdf.sort_values("date", ascending=False)
     hit_streak = 0
     games_since = 0
