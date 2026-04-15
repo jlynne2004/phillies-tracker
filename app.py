@@ -478,43 +478,58 @@ with tab_players:
 
         border_color = "#c8102e55" if drought else "#2a2a2a"
         box_shadow = "0 0 20px rgba(200,16,46,0.15)" if drought else "none"
+        streak_html = f'<span style="color:#4ade80;font-size:11px;text-transform:uppercase;letter-spacing:1px">🔥 {hit_streak}-game hit streak</span>' if hit_streak >= 2 else ""
 
-        streak_html = f'<span class="streak-badge">🔥 {hit_streak}-game hit streak</span>' if hit_streak >= 2 else ""
+        last_hit_str = last_hit_date.strftime("%b %d, %Y").replace(" 0", " ") if last_hit_date else "—"
+        last_hit_sub = f"vs {last_hit_opp}" if last_hit_opp else "no data"
+        elapsed_str  = elapsed_days(last_hit_date)
+        games_ab_str = f"{games_since}G / {ab_since}AB" if games_logged else "—"
 
-        st.markdown(f"""
-        <div style="background:#161616;border:1px solid {border_color};border-radius:12px;
-            overflow:hidden;margin-bottom:16px;box-shadow:{box_shadow}">
+        def stat_cell(lbl, val, sub="", border=True):
+            br = "1px solid #1f1f1f" if border else "none"
+            return f'<div style="padding:12px 10px;text-align:center;border-right:{br}"><div style="font-size:9px;color:#555;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">{lbl}</div><div style="font-size:13px;font-weight:bold;color:#f0ece4">{val}</div><div style="font-size:9px;color:#444;margin-top:2px">{sub}</div></div>'
+
+        def count_cell(lbl, val, border=True):
+            br = "1px solid #1f1f1f" if border else "none"
+            return f'<div style="padding:10px 6px;text-align:center;border-right:{br}"><div style="font-size:9px;color:#555;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">{lbl}</div><div style="font-size:15px;font-weight:bold;color:#e8d5a0">{val}</div></div>'
+
+        def rate_cell(lbl, val, border=True):
+            br = "1px solid #1f1f1f" if border else "none"
+            return f'<div style="padding:10px 6px;text-align:center;border-right:{br}"><div style="font-size:9px;color:#555;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">{lbl}</div><div style="font-size:14px;font-weight:bold;color:#e8d5a0">{val}</div></div>'
+
+        drought_bar = f'<div style="background:rgba(200,16,46,0.12);padding:8px 16px;border-top:1px solid rgba(200,16,46,0.2);text-align:center;font-size:12px;color:#c8102e">&#9888; {games_since}-game hitless streak &mdash; {ab_since} AB without a hit</div>' if drought else ""
+
+        html = f"""
+        <div style="background:#161616;border:1px solid {border_color};border-radius:12px;overflow:hidden;margin-bottom:16px;box-shadow:{box_shadow}">
             <div style="display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid #1f1f1f;gap:12px">
-                <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#c8102e,#9b0c23);
-                    border:2px solid rgba(232,213,160,0.3);display:flex;align-items:center;justify-content:center;
-                    font-size:13px;font-weight:bold;color:#e8d5a0;flex-shrink:0">#{PLAYER_NUMBERS[player]}</div>
+                <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#c8102e,#9b0c23);border:2px solid rgba(232,213,160,0.3);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:bold;color:#e8d5a0;flex-shrink:0">#{PLAYER_NUMBERS[player]}</div>
                 <div style="flex:1">
                     <div style="font-size:17px;font-weight:700;color:#f0ece4">{player}</div>
-                    <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-top:2px">
-                        {games_logged} games logged &nbsp; {streak_html}
-                    </div>
+                    <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-top:2px">{games_logged} games logged &nbsp; {streak_html}</div>
                 </div>
             </div>
-
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid #1f1f1f">
-                {"".join([f'<div style="padding:12px 10px;text-align:center;border-right:{("1px solid #1f1f1f" if i<2 else "none")}"><div style="font-size:9px;color:#555;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">{lbl}</div><div style="font-size:13px;font-weight:bold;color:#f0ece4">{val}</div><div style="font-size:9px;color:#444;margin-top:2px">{sub}</div></div>' for i,(lbl,val,sub) in enumerate([
-                    ("Last Hit", last_hit_date.strftime("%b %d, %Y").replace(" 0", " ") if last_hit_date else "—", f"vs {last_hit_opp}" if last_hit_opp else "no data"),
-                    ("Time Elapsed", elapsed_days(last_hit_date), "since last hit"),
-                    ("Games / AB", f"{games_since}G / {ab_since}AB" if games_logged else "—", "since last hit"),
-                ])])}
+                {stat_cell("Last Hit", last_hit_str, last_hit_sub, True)}
+                {stat_cell("Time Elapsed", elapsed_str, "since last hit", True)}
+                {stat_cell("Games / AB", games_ab_str, "since last hit", False)}
             </div>
-
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;border-bottom:1px solid #1f1f1f">
-                {"".join([f'<div style="padding:10px 6px;text-align:center;border-right:{("1px solid #1f1f1f" if i<4 else "none")}"><div style="font-size:9px;color:#555;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">{lbl}</div><div style="font-size:15px;font-weight:bold;color:#e8d5a0">{val}</div></div>' for i,(lbl,val) in enumerate([("H",s["h"]),("HR",s["hr"]),("R",s["r"]),("RBI",s["rbi"]),("BB",s["bb"])])])}
+                {count_cell("H", s["h"], True)}
+                {count_cell("HR", s["hr"], True)}
+                {count_cell("R", s["r"], True)}
+                {count_cell("RBI", s["rbi"], True)}
+                {count_cell("BB", s["bb"], False)}
             </div>
-
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr">
-                {"".join([f'<div style="padding:10px 6px;text-align:center;border-right:{("1px solid #1f1f1f" if i<3 else "none")}"><div style="font-size:9px;color:#555;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">{lbl}</div><div style="font-size:14px;font-weight:bold;color:#e8d5a0">{val}</div></div>' for i,(lbl,val) in enumerate([("BA",s["ba"]),("OBP",s["obp"]),("SLG",s["slg"]),("OPS",s["ops"])])])}
+                {rate_cell("BA", s["ba"], True)}
+                {rate_cell("OBP", s["obp"], True)}
+                {rate_cell("SLG", s["slg"], True)}
+                {rate_cell("OPS", s["ops"], False)}
             </div>
-
-            {f'<div style="background:rgba(200,16,46,0.12);padding:8px 16px;border-top:1px solid rgba(200,16,46,0.2);text-align:center;font-size:12px;color:#c8102e">⚠️ {games_since}-game hitless streak — {ab_since} AB without a hit</div>' if drought else ""}
+            {drought_bar}
         </div>
-        """, unsafe_allow_html=True)
+        """
+        st.markdown(html, unsafe_allow_html=True)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
