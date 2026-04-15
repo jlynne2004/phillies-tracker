@@ -498,7 +498,7 @@ with tab_players:
 
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid #1f1f1f">
                 {"".join([f'<div style="padding:12px 10px;text-align:center;border-right:{("1px solid #1f1f1f" if i<2 else "none")}"><div style="font-size:9px;color:#555;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">{lbl}</div><div style="font-size:13px;font-weight:bold;color:#f0ece4">{val}</div><div style="font-size:9px;color:#444;margin-top:2px">{sub}</div></div>' for i,(lbl,val,sub) in enumerate([
-                    ("Last Hit", last_hit_date.strftime("%b %-d, %Y") if last_hit_date else "—", f"vs {last_hit_opp}" if last_hit_opp else "no data"),
+                    ("Last Hit", last_hit_date.strftime("%b %d, %Y").replace(" 0", " ") if last_hit_date else "—", f"vs {last_hit_opp}" if last_hit_opp else "no data"),
                     ("Time Elapsed", elapsed_days(last_hit_date), "since last hit"),
                     ("Games / AB", f"{games_since}G / {ab_since}AB" if games_logged else "—", "since last hit"),
                 ])])}
@@ -512,7 +512,7 @@ with tab_players:
                 {"".join([f'<div style="padding:10px 6px;text-align:center;border-right:{("1px solid #1f1f1f" if i<3 else "none")}"><div style="font-size:9px;color:#555;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">{lbl}</div><div style="font-size:14px;font-weight:bold;color:#e8d5a0">{val}</div></div>' for i,(lbl,val) in enumerate([("BA",s["ba"]),("OBP",s["obp"]),("SLG",s["slg"]),("OPS",s["ops"])])])}
             </div>
 
-            {"f'<div style=\"background:rgba(200,16,46,0.12);padding:8px 16px;border-top:1px solid rgba(200,16,46,0.2);text-align:center;font-size:12px;color:#c8102e\">⚠️ {games_since}-game hitless streak — {ab_since} AB without a hit</div>'" if drought else ""}
+            {f'<div style="background:rgba(200,16,46,0.12);padding:8px 16px;border-top:1px solid rgba(200,16,46,0.2);text-align:center;font-size:12px;color:#c8102e">⚠️ {games_since}-game hitless streak — {ab_since} AB without a hit</div>' if drought else ""}
         </div>
         """, unsafe_allow_html=True)
 
