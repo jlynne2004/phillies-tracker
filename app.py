@@ -144,6 +144,12 @@ def calc_hand_splits(df):
     delta=(date.today()-d).days
     return "Today" if delta==0 else f"{delta}d ago"
 
+def elapsed_days(d):
+    if d is None: return "—"
+    delta = (date.today() - d).days
+    return "Today" if delta == 0 else f"{delta}d ago"
+
+
 def sparkline_svg(ba_series, width=120, height=32):
     """Generate a tiny SVG sparkline of BA over games."""
     if len(ba_series) < 2: return ""
