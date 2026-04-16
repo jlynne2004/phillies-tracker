@@ -301,38 +301,35 @@ with tab_players:
         elapsed_str  = elapsed_days(last_hit_date)
         games_ab_str = f"{games_since}G / {ab_since}AB" if games_logged else "—"
 
-        # Sparkline
+        # Pre-build all pieces
         ba_series = running_ba(pdf)
         spark = sparkline_svg(ba_series)
-
         drought_bar = f'<div style="background:rgba(200,16,46,0.12);padding:8px 16px;border-top:1px solid rgba(200,16,46,0.2);text-align:center;font-size:12px;color:#c8102e">&#9888; {games_since}-game hitless streak &mdash; {ab_since} AB without a hit</div>' if drought else ""
 
-        html = f"""
-        <div style="background:#161616;border:1px solid {border_color};border-radius:12px;overflow:hidden;margin-bottom:16px;box-shadow:{box_shadow}">
-            <div style="display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid #1f1f1f;gap:12px;position:relative">
-                {spark}
-                <img src="{headshot_url(player)}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid #c8102e;flex-shrink:0;position:relative;z-index:1" onerror="this.style.background='linear-gradient(135deg,#c8102e,#9b0c23)';this.style.minWidth='52px'"/>
-                <div style="flex:1;position:relative;z-index:1">
-                    <div style="font-size:17px;font-weight:700;color:#f0ece4">{player}</div>
-                    <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-top:2px">
-                        {games_logged} games logged &nbsp;·&nbsp; #{PLAYER_NUMBERS[player]} &nbsp; {status_html}
-                    </div>
-                </div>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid #1f1f1f">
-                {stat_cell("Last Hit", last_hit_str, last_hit_sub, True)}
-                {stat_cell("Time Elapsed", elapsed_str, "since last hit", True)}
-                {stat_cell("Games / AB", games_ab_str, "since last hit", False)}
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr">
-                {rate_cell("BA", s["ba"], True)}
-                {rate_cell("HR", s["hr"], True)}
-                {rate_cell("RBI", s["rbi"], True)}
-                {rate_cell("OPS", s["ops"], False)}
-            </div>
-            {drought_bar}
-        </div>
-        """
+        cell_last   = stat_cell("Last Hit",    last_hit_str,  last_hit_sub,     True)
+        cell_elap   = stat_cell("Time Elapsed", elapsed_str,  "since last hit",  True)
+        cell_gab    = stat_cell("Games / AB",   games_ab_str, "since last hit",  False)
+        cell_ba     = rate_cell("BA",  s["ba"],       True)
+        cell_hr     = rate_cell("HR",  str(s["hr"]),  True)
+        cell_rbi    = rate_cell("RBI", str(s["rbi"]), True)
+        cell_ops    = rate_cell("OPS", s["ops"],       False)
+        img_src     = headshot_url(player)
+        num         = PLAYER_NUMBERS[player]
+
+        html = (
+            f'<div style="background:#161616;border:1px solid {border_color};border-radius:12px;overflow:hidden;margin-bottom:16px;box-shadow:{box_shadow}">'
+            f'<div style="display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid #1f1f1f;gap:12px;position:relative">'
+            f'{spark}'
+            f'<img src="{img_src}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid #c8102e;flex-shrink:0;position:relative;z-index:1"/>'
+            f'<div style="flex:1;position:relative;z-index:1">'
+            f'<div style="font-size:17px;font-weight:700;color:#f0ece4">{player}</div>'
+            f'<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-top:2px">{games_logged} games logged &nbsp;&middot;&nbsp; #{num} &nbsp; {status_html}</div>'
+            f'</div></div>'
+            f'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid #1f1f1f">{cell_last}{cell_elap}{cell_gab}</div>'
+            f'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr">{cell_ba}{cell_hr}{cell_rbi}{cell_ops}</div>'
+            f'{drought_bar}'
+            f'</div>'
+        )
         st.markdown(html, unsafe_allow_html=True)
 
 
