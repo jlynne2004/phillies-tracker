@@ -146,9 +146,9 @@ def running_ba(pdf):
 # ── HEADER ───────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="tracker-header">
-    <div class="eyebrow">Philadelphia Phillies</div>
+    <div class="eyebrow">Philadelphia Phillies &nbsp;&middot;&nbsp; 2026 Season</div>
     <h1>The $85M Hit Drought Tracker</h1>
-    <div class="season">2026 Season</div>
+    <div class="season">📊 Stats updated every Saturday &mdash; or log games yourself in real time using the Log Game tab!</div>
 </div>
 """, unsafe_allow_html=True)
 
