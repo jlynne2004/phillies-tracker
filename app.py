@@ -16,7 +16,7 @@ def headshot_url(player):
 
 LOG_PATH    = "data/game_log.csv"
 RECORD_PATH = "data/team_record.csv"
-LOG_COLS    = ["player","date","opponent","home_away","pitcher_hand","pa","ab","hits","doubles","triples","hr","bb","hbp","sf","r","rbi","team_h","team_ab"]
+LOG_COLS    = ["player","date","opponent","home_away","pa","ab","hits","doubles","triples","hr","bb","hbp","sf","r","rbi","pa_vs_r","ab_vs_r","h_vs_r","hr_vs_r","bb_vs_r","hbp_vs_r","sf_vs_r","pa_vs_l","ab_vs_l","h_vs_l","hr_vs_l","bb_vs_l","hbp_vs_l","sf_vs_l","team_h","team_ab"]
 
 # ── CSS ──────────────────────────────────────────────────────────────────────
 st.markdown("""
@@ -55,14 +55,16 @@ def load_log():
         df = pd.read_csv(LOG_PATH)
         for col in LOG_COLS:
             if col not in df.columns:
-                df[col] = 0 if col not in ["home_away","pitcher_hand","opponent","player","date"] else ""
+                df[col] = 0 if col not in ["home_away","opponent","player","date"] else ""
         df["date"] = pd.to_datetime(df["date"]).dt.date
-        for col in ["pa","ab","hits","doubles","triples","hr","bb","hbp","sf","r","rbi","team_h","team_ab"]:
+        int_cols = ["pa","ab","hits","doubles","triples","hr","bb","hbp","sf","r","rbi",
+                    "pa_vs_r","ab_vs_r","h_vs_r","hr_vs_r","bb_vs_r","hbp_vs_r","sf_vs_r",
+                    "pa_vs_l","ab_vs_l","h_vs_l","hr_vs_l","bb_vs_l","hbp_vs_l","sf_vs_l",
+                    "team_h","team_ab"]
+        for col in int_cols:
             df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0).astype(int)
         if "home_away" not in df.columns or df["home_away"].isnull().all():
             df["home_away"] = "Home"
-        if "pitcher_hand" not in df.columns or df["pitcher_hand"].isnull().all():
-            df["pitcher_hand"] = ""
         return df
     return pd.DataFrame(columns=LOG_COLS)
 
@@ -114,7 +116,30 @@ def calc_streak(pdf):
             else: streak_done=True
     return hit_streak, games_since, ab_since, last_hit_date, last_hit_opp
 
-def elapsed_days(d):
+def calc_hand_splits(df):
+    """Calculate BA, OBP, SLG, OPS vs R and vs L pitchers."""
+    def splits(ab, h, hr, bb, hbp, sf):
+        singles = h - hr  # simplified: no 2B/3B split by hand stored
+        tb = singles + 4 * hr  # simplified total bases
+        obp_d = ab + bb + hbp + sf
+        ba_r  = h/ab if ab > 0 else 0
+        obp_r = (h+bb+hbp)/obp_d if obp_d > 0 else 0
+        slg_r = tb/ab if ab > 0 else 0
+        ops_r = obp_r + slg_r
+        def fmt(v): return f"{v:.3f}".lstrip("0") or ".000"
+        return {"ab":ab,"h":h,"hr":hr,"bb":bb,"ba":fmt(ba_r),"obp":fmt(obp_r),"slg":fmt(slg_r),"ops":f"{ops_r:.3f}"}
+    if df.empty:
+        empty = {"ab":0,"h":0,"hr":0,"bb":0,"ba":".000","obp":".000","slg":".000","ops":".000"}
+        return empty, empty
+    vs_r = splits(
+        int(df["ab_vs_r"].sum()), int(df["h_vs_r"].sum()), int(df["hr_vs_r"].sum()),
+        int(df["bb_vs_r"].sum()), int(df["hbp_vs_r"].sum()), int(df["sf_vs_r"].sum())
+    )
+    vs_l = splits(
+        int(df["ab_vs_l"].sum()), int(df["h_vs_l"].sum()), int(df["hr_vs_l"].sum()),
+        int(df["bb_vs_l"].sum()), int(df["hbp_vs_l"].sum()), int(df["sf_vs_l"].sum())
+    )
+    return vs_r, vs_l
     if d is None: return "—"
     delta=(date.today()-d).days
     return "Today" if delta==0 else f"{delta}d ago"
@@ -301,6 +326,9 @@ with tab_players:
         elapsed_str  = elapsed_days(last_hit_date)
         games_ab_str = f"{games_since}G / {ab_since}AB" if games_logged else "—"
 
+        vs_r, vs_l = calc_hand_splits(pdf)
+        has_splits = vs_r["ab"] > 0 or vs_l["ab"] > 0
+
         # Pre-build all pieces
         ba_series = running_ba(pdf)
         spark = sparkline_svg(ba_series)
@@ -316,6 +344,29 @@ with tab_players:
         img_src     = headshot_url(player)
         num         = PLAYER_NUMBERS[player]
 
+        splits_html = ""
+        if has_splits:
+            splits_html = (
+                f'<div style="display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #1f1f1f">'
+                f'<div style="padding:10px 12px;border-right:1px solid #1f1f1f">'
+                f'<div style="font-size:9px;color:#555;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">vs RHP &nbsp;<span style="color:#666">({vs_r["ab"]}AB)</span></div>'
+                f'<div style="display:flex;gap:12px">'
+                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:9px;color:#555;text-transform:uppercase">BA </span>{vs_r["ba"]}</span>'
+                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:9px;color:#555;text-transform:uppercase">OBP </span>{vs_r["obp"]}</span>'
+                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:9px;color:#555;text-transform:uppercase">SLG </span>{vs_r["slg"]}</span>'
+                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:9px;color:#555;text-transform:uppercase">OPS </span>{vs_r["ops"]}</span>'
+                f'</div></div>'
+                f'<div style="padding:10px 12px">'
+                f'<div style="font-size:9px;color:#555;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">vs LHP &nbsp;<span style="color:#666">({vs_l["ab"]}AB)</span></div>'
+                f'<div style="display:flex;gap:12px">'
+                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:9px;color:#555;text-transform:uppercase">BA </span>{vs_l["ba"]}</span>'
+                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:9px;color:#555;text-transform:uppercase">OBP </span>{vs_l["obp"]}</span>'
+                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:9px;color:#555;text-transform:uppercase">SLG </span>{vs_l["slg"]}</span>'
+                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:9px;color:#555;text-transform:uppercase">OPS </span>{vs_l["ops"]}</span>'
+                f'</div></div>'
+                f'</div>'
+            )
+
         html = (
             f'<div style="background:#161616;border:1px solid {border_color};border-radius:12px;overflow:hidden;margin-bottom:16px;box-shadow:{box_shadow}">'
             f'<div style="display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid #1f1f1f;gap:12px;position:relative">'
@@ -327,6 +378,7 @@ with tab_players:
             f'</div></div>'
             f'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid #1f1f1f">{cell_last}{cell_elap}{cell_gab}</div>'
             f'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr">{cell_ba}{cell_hr}{cell_rbi}{cell_ops}</div>'
+            f'{splits_html}'
             f'{drought_bar}'
             f'</div>'
         )
@@ -406,14 +458,13 @@ with tab_log:
 with tab_entry:
     st.markdown("### ➕ Log a Game")
     with st.form("log_form", clear_on_submit=True):
-        lc1,lc2,lc3,lc4 = st.columns(4)
+        lc1,lc2,lc3 = st.columns(3)
         l_player = lc1.selectbox("Player", PLAYERS)
         l_date   = lc2.date_input("Game Date", value=date.today())
         l_ha     = lc3.selectbox("Home / Away", ["Home","Away"])
-        l_ph     = lc4.selectbox("Pitcher Hand", ["R","L","—"])
         l_opp    = st.text_input("Opponent (e.g. ARI, ATL, NYM)")
 
-        st.markdown("**Player Stats**")
+        st.markdown("**Overall Stats**")
         cc1,cc2,cc3,cc4,cc5 = st.columns(5)
         l_pa  = cc1.number_input("PA", min_value=0,value=0)
         l_ab  = cc2.number_input("AB", min_value=0,value=4)
@@ -428,10 +479,30 @@ with tab_entry:
         l_r   = cc10.number_input("R",  min_value=0,value=0)
         l_rbi = cc11.number_input("RBI",min_value=0,value=0)
 
-        st.markdown("**Team Stats (for Core 4 vs. Team comparison)**")
+        st.markdown("**vs RHP**")
+        rc1,rc2,rc3,rc4,rc5,rc6,rc7 = st.columns(7)
+        l_pa_r  = rc1.number_input("PA",  min_value=0,value=0,key="pa_r")
+        l_ab_r  = rc2.number_input("AB",  min_value=0,value=0,key="ab_r")
+        l_h_r   = rc3.number_input("H",   min_value=0,value=0,key="h_r")
+        l_hr_r  = rc4.number_input("HR",  min_value=0,value=0,key="hr_r")
+        l_bb_r  = rc5.number_input("BB",  min_value=0,value=0,key="bb_r")
+        l_hbp_r = rc6.number_input("HBP", min_value=0,value=0,key="hbp_r")
+        l_sf_r  = rc7.number_input("SF",  min_value=0,value=0,key="sf_r")
+
+        st.markdown("**vs LHP**")
+        lc1b,lc2b,lc3b,lc4b,lc5b,lc6b,lc7b = st.columns(7)
+        l_pa_l  = lc1b.number_input("PA",  min_value=0,value=0,key="pa_l")
+        l_ab_l  = lc2b.number_input("AB",  min_value=0,value=0,key="ab_l")
+        l_h_l   = lc3b.number_input("H",   min_value=0,value=0,key="h_l")
+        l_hr_l  = lc4b.number_input("HR",  min_value=0,value=0,key="hr_l")
+        l_bb_l  = lc5b.number_input("BB",  min_value=0,value=0,key="bb_l")
+        l_hbp_l = lc6b.number_input("HBP", min_value=0,value=0,key="hbp_l")
+        l_sf_l  = lc7b.number_input("SF",  min_value=0,value=0,key="sf_l")
+
+        st.markdown("**Team Stats**")
         tc1,tc2 = st.columns(2)
-        l_th  = tc1.number_input("Team Hits",    min_value=0,value=0)
-        l_tab = tc2.number_input("Team At-Bats",  min_value=0,value=0)
+        l_th  = tc1.number_input("Team Hits",   min_value=0,value=0)
+        l_tab = tc2.number_input("Team At-Bats", min_value=0,value=0)
 
         submitted = st.form_submit_button("⚾ Save Game", use_container_width=True)
         if submitted:
@@ -440,13 +511,14 @@ with tab_entry:
             elif (l_2b+l_3b+l_hr) > l_h: st.error("XBH can't exceed total hits!")
             else:
                 new_row = pd.DataFrame([{
-                    "player":l_player,"date":l_date,"opponent":l_opp.upper(),
-                    "home_away":l_ha,"pitcher_hand":l_ph,
+                    "player":l_player,"date":l_date,"opponent":l_opp.upper(),"home_away":l_ha,
                     "pa":l_pa,"ab":l_ab,"hits":l_h,"doubles":l_2b,"triples":l_3b,
                     "hr":l_hr,"bb":l_bb,"hbp":l_hbp,"sf":l_sf,"r":l_r,"rbi":l_rbi,
+                    "pa_vs_r":l_pa_r,"ab_vs_r":l_ab_r,"h_vs_r":l_h_r,"hr_vs_r":l_hr_r,"bb_vs_r":l_bb_r,"hbp_vs_r":l_hbp_r,"sf_vs_r":l_sf_r,
+                    "pa_vs_l":l_pa_l,"ab_vs_l":l_ab_l,"h_vs_l":l_h_l,"hr_vs_l":l_hr_l,"bb_vs_l":l_bb_l,"hbp_vs_l":l_hbp_l,"sf_vs_l":l_sf_l,
                     "team_h":l_th,"team_ab":l_tab,
                 }])
                 log_df = pd.concat([log_df,new_row],ignore_index=True)
                 save_log(log_df)
-                st.success(f"✅ {l_player} — {l_date} vs {l_opp.upper()} ({l_ha}, vs {l_ph}P) logged!")
+                st.success(f"✅ {l_player} — {l_date} vs {l_opp.upper()} ({l_ha}) logged!")
                 st.rerun()
