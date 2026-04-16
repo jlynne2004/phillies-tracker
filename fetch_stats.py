@@ -127,6 +127,30 @@ def fetch_player(name, player_id, start_date, end_date):
         else:
             opponent = str(pa_df["home_team"].iloc[0]).upper() if "home_team" in pa_df.columns else "—"
 
+        # ── Overall counting stats ───────────────────────────────────────────
+        events   = pa_df["events"].str.lower()
+        pa       = len(pa_df)
+        bb       = int((events == "walk").sum())
+        hbp      = int((events == "hit_by_pitch").sum())
+        sf       = int((events == "sac_fly").sum())
+        sac_bunt = int((events == "sac_bunt").sum())
+        ab       = pa - bb - hbp - sf - sac_bunt
+        hits     = int((events.isin(["single","double","triple","home_run"])).sum())
+        doubles  = int((events == "double").sum())
+        triples  = int((events == "triple").sum())
+        hr       = int((events == "home_run").sum())
+
+        # R — from post_bat_score delta
+        r = 0
+        if "post_bat_score" in pa_df.columns and "bat_score" in pa_df.columns:
+            pa_df["runs_this_pa"] = pd.to_numeric(pa_df["post_bat_score"], errors="coerce") - pd.to_numeric(pa_df["bat_score"], errors="coerce")
+            r = int(pa_df["runs_this_pa"].clip(lower=0).sum())
+
+        # RBI — from batted_rbi field if available
+        rbi = 0
+        if "batted_rbi" in pa_df.columns:
+            rbi = int(pd.to_numeric(pa_df["batted_rbi"], errors="coerce").fillna(0).sum())
+
         # ── Per-pitcher-hand splits ──────────────────────────────────────────
         def hand_stats(hand_df):
             if hand_df.empty:
