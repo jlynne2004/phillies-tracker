@@ -230,7 +230,7 @@ with tab_team:
         st.markdown('<div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#e8d5a0;margin-bottom:12px">Core 4 vs. Rest of Lineup</div>', unsafe_allow_html=True)
 
         # Per game comparison — use most recent game date
-        game_dates = sorted(log_df["date"].unique(), reverse=True)
+        game_dates = sorted(log_df["date"].dropna().unique(), reverse=True)
         recent = game_dates[0] if game_dates else None
         if recent:
             recent_df = log_df[log_df["date"]==recent]
