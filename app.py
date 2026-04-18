@@ -4,11 +4,19 @@ import os
 from datetime import date
 
 # ── CONFIG ───────────────────────────────────────────────────────────────────
-st.set_page_config(page_title="The $85M Hit Drought Tracker", page_icon="⚾", layout="wide")
+st.set_page_config(page_title="The $97,657,342 Hit Drought Tracker", page_icon="⚾", layout="wide")
 
 PLAYERS = ["Bryce Harper", "Kyle Schwarber", "Trea Turner", "J.T. Realmuto"]
 PLAYER_NUMBERS = {"Bryce Harper": "3", "Kyle Schwarber": "12", "Trea Turner": "7", "J.T. Realmuto": "10"}
 PLAYER_IDS = {"Bryce Harper": "547180", "Kyle Schwarber": "656941", "Trea Turner": "607208", "J.T. Realmuto": "592663"}
+PLAYER_SALARIES = {
+    "Bryce Harper":   25_384_615,
+    "Kyle Schwarber": 30_000_000,
+    "Trea Turner":    27_272_727,
+    "J.T. Realmuto":  15_000_000,
+}
+TOTAL_SALARY = sum(PLAYER_SALARIES.values())  # $97,657,342
+SEASON_GAMES = 162
 
 def headshot_url(player):
     pid = PLAYER_IDS[player]
@@ -178,7 +186,7 @@ def running_ba(pdf):
 st.markdown("""
 <div class="tracker-header">
     <div class="eyebrow">Philadelphia Phillies &nbsp;&middot;&nbsp; 2026 Season</div>
-    <h1>The $85M Hit Drought Tracker</h1>
+    <h1>The $97,657,342 Hit Drought Tracker</h1>
     <div class="season">📊 Stats updated every Saturday &mdash; or log games yourself in real time using the Log Game tab!</div>
 </div>
 """, unsafe_allow_html=True)
@@ -186,7 +194,7 @@ st.markdown("""
 log_df = load_log()
 wins, losses = load_record()
 
-tab_team, tab_players, tab_log, tab_entry = st.tabs(["🏆 Team", "⚾ Players", "📋 Game Log", "➕ Log Game"])
+tab_team, tab_players, tab_log, tab_entry, tab_receipts = st.tabs(["🏆 Team", "⚾ Players", "📋 Game Log", "➕ Log Game", "🧾 Receipts"])
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TEAM TAB
@@ -528,3 +536,135 @@ with tab_entry:
                 save_log(log_df)
                 st.success(f"✅ {l_player} — {l_date} vs {l_opp.upper()} ({l_ha}) logged!")
                 st.rerun()
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# RECEIPTS TAB 🧾
+# ══════════════════════════════════════════════════════════════════════════════
+with tab_receipts:
+    st.markdown("""
+    <div style="background:rgba(200,16,46,0.08);border:1px solid rgba(200,16,46,0.2);border-radius:12px;padding:16px;margin-bottom:20px;text-align:center">
+        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#e8d5a0;margin-bottom:8px">Total 2026 Commitment</div>
+        <div style="font-size:36px;font-weight:700;color:#c8102e;font-family:'Playfair Display',serif">$97,657,342</div>
+        <div style="font-size:12px;color:#666;margin-top:6px">Schwarber $30M · Turner $27.3M · Harper $25.4M · Realmuto $15M</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Calculate games played and salary burned so far
+    all_stats_r = {p: calc_stats(log_df[log_df["player"]==p]) for p in PLAYERS}
+
+    # Games played per player (number of rows logged)
+    games_played = {p: len(log_df[log_df["player"]==p]) for p in PLAYERS}
+    max_games = max(games_played.values()) if games_played else 0
+
+    # Prorated salary burned = salary * (games_played / 162)
+    def salary_burned(player):
+        g = games_played[player]
+        return PLAYER_SALARIES[player] * (g / SEASON_GAMES)
+
+    def cost_per(salary, stat):
+        return salary / stat if stat > 0 else None
+
+    def fmt_money(val):
+        if val is None: return "—"
+        if val >= 1_000_000: return f"${val/1_000_000:.2f}M"
+        return f"${val:,.0f}"
+
+    total_burned = sum(salary_burned(p) for p in PLAYERS)
+
+    # Summary burned so far
+    st.markdown(f"""
+    <div style="background:#161616;border:1px solid #2a2a2a;border-radius:12px;padding:16px;margin-bottom:16px">
+        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#e8d5a0;margin-bottom:12px">💸 Salary Burned So Far ({max_games} games)</div>
+        <div style="font-size:28px;font-weight:700;color:#c8102e">{fmt_money(total_burned)}</div>
+        <div style="font-size:12px;color:#555;margin-top:4px">of $97,657,342 total commitment · {max_games/SEASON_GAMES*100:.1f}% of season complete</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Per-player receipts
+    st.markdown('<div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#e8d5a0;margin-bottom:12px">Per Player Breakdown</div>', unsafe_allow_html=True)
+
+    for player in PLAYERS:
+        s = all_stats_r[player]
+        sal = PLAYER_SALARIES[player]
+        burned = salary_burned(player)
+        g = games_played[player]
+
+        cph   = cost_per(sal, s["h"])
+        cphr  = cost_per(sal, s["hr"])
+        cprbi = cost_per(sal, s["rbi"])
+        cpg   = cost_per(sal, g) if g > 0 else None
+
+        # Sarcasm level based on OPS
+        ops_raw = s["ops_raw"]
+        if ops_raw >= 0.900:   sarcasm = "💰 Getting their money's worth!"
+        elif ops_raw >= 0.750: sarcasm = "📊 Earning it... mostly."
+        elif ops_raw >= 0.600: sarcasm = "🤔 The Phillies would like a word."
+        else:                  sarcasm = "🚨 Please sir, a hit. Any hit."
+
+        html = (
+            f'<div style="background:#161616;border:1px solid #2a2a2a;border-radius:12px;overflow:hidden;margin-bottom:12px">'
+            f'<div style="display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid #1f1f1f;gap:12px">'
+            f'<img src="{headshot_url(player)}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #c8102e;flex-shrink:0"/>'
+            f'<div style="flex:1">'
+            f'<div style="font-size:16px;font-weight:700;color:#f0ece4">{player}</div>'
+            f'<div style="font-size:11px;color:#666;margin-top:2px">${sal:,} · {sarcasm}</div>'
+            f'</div>'
+            f'<div style="text-align:right">'
+            f'<div style="font-size:11px;color:#555;text-transform:uppercase;letter-spacing:1px">Burned</div>'
+            f'<div style="font-size:18px;font-weight:700;color:#c8102e">{fmt_money(burned)}</div>'
+            f'</div>'
+            f'</div>'
+            f'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr">'
+            f'<div style="padding:12px 10px;text-align:center;border-right:1px solid #1f1f1f">'
+            f'<div style="font-size:9px;color:#555;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">Cost / Hit</div>'
+            f'<div style="font-size:15px;font-weight:bold;color:#e8d5a0">{fmt_money(cph)}</div>'
+            f'<div style="font-size:9px;color:#444;margin-top:2px">{s["h"]} hits</div>'
+            f'</div>'
+            f'<div style="padding:12px 10px;text-align:center;border-right:1px solid #1f1f1f">'
+            f'<div style="font-size:9px;color:#555;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">Cost / HR</div>'
+            f'<div style="font-size:15px;font-weight:bold;color:#e8d5a0">{fmt_money(cphr)}</div>'
+            f'<div style="font-size:9px;color:#444;margin-top:2px">{s["hr"]} home runs</div>'
+            f'</div>'
+            f'<div style="padding:12px 10px;text-align:center;border-right:1px solid #1f1f1f">'
+            f'<div style="font-size:9px;color:#555;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">Cost / RBI</div>'
+            f'<div style="font-size:15px;font-weight:bold;color:#e8d5a0">{fmt_money(cprbi)}</div>'
+            f'<div style="font-size:9px;color:#444;margin-top:2px">{s["rbi"]} RBI</div>'
+            f'</div>'
+            f'<div style="padding:12px 10px;text-align:center">'
+            f'<div style="font-size:9px;color:#555;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">Cost / Game</div>'
+            f'<div style="font-size:15px;font-weight:bold;color:#e8d5a0">{fmt_money(cpg)}</div>'
+            f'<div style="font-size:9px;color:#444;margin-top:2px">{g} games</div>'
+            f'</div>'
+            f'</div>'
+            f'</div>'
+        )
+        st.markdown(html, unsafe_allow_html=True)
+
+    # Combined receipts footer
+    total_h   = sum(all_stats_r[p]["h"]   for p in PLAYERS)
+    total_hr  = sum(all_stats_r[p]["hr"]  for p in PLAYERS)
+    total_rbi = sum(all_stats_r[p]["rbi"] for p in PLAYERS)
+
+    st.markdown(f"""
+    <div style="background:#161616;border:1px solid #2a2a2a;border-radius:12px;padding:16px;margin-top:8px;text-align:center">
+        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#e8d5a0;margin-bottom:12px">Combined $97,657,342 Receipt</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0">
+            <div style="border-right:1px solid #2a2a2a;padding:8px">
+                <div style="font-size:9px;color:#555;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px">$ per Hit</div>
+                <div style="font-size:20px;font-weight:700;color:#c8102e">{fmt_money(TOTAL_SALARY/total_h if total_h>0 else None)}</div>
+                <div style="font-size:10px;color:#444">{total_h} total hits</div>
+            </div>
+            <div style="border-right:1px solid #2a2a2a;padding:8px">
+                <div style="font-size:9px;color:#555;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px">$ per HR</div>
+                <div style="font-size:20px;font-weight:700;color:#c8102e">{fmt_money(TOTAL_SALARY/total_hr if total_hr>0 else None)}</div>
+                <div style="font-size:10px;color:#444">{total_hr} total home runs</div>
+            </div>
+            <div style="padding:8px">
+                <div style="font-size:9px;color:#555;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px">$ per RBI</div>
+                <div style="font-size:20px;font-weight:700;color:#c8102e">{fmt_money(TOTAL_SALARY/total_rbi if total_rbi>0 else None)}</div>
+                <div style="font-size:10px;color:#444">{total_rbi} total RBI</div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
