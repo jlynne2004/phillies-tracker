@@ -4,11 +4,19 @@ import os
 from datetime import date
 
 # ── CONFIG ───────────────────────────────────────────────────────────────────
-st.set_page_config(page_title="The $85M Hit Drought Tracker", page_icon="⚾", layout="wide")
+st.set_page_config(page_title="The $97.7M Hit Drought Tracker", page_icon="⚾", layout="wide")
 
 PLAYERS = ["Bryce Harper", "Kyle Schwarber", "Trea Turner", "J.T. Realmuto"]
 PLAYER_NUMBERS = {"Bryce Harper": "3", "Kyle Schwarber": "12", "Trea Turner": "7", "J.T. Realmuto": "10"}
 PLAYER_IDS = {"Bryce Harper": "547180", "Kyle Schwarber": "656941", "Trea Turner": "607208", "J.T. Realmuto": "592663"}
+PLAYER_SALARIES = {
+    "Bryce Harper":   25_384_615,
+    "Kyle Schwarber": 30_000_000,
+    "Trea Turner":    27_272_727,
+    "J.T. Realmuto":  15_000_000,
+}
+TOTAL_SALARY = sum(PLAYER_SALARIES.values())  # $97,657,342
+SEASON_GAMES = 162
 
 def headshot_url(player):
     pid = PLAYER_IDS[player]
@@ -16,7 +24,7 @@ def headshot_url(player):
 
 LOG_PATH    = "data/game_log.csv"
 RECORD_PATH = "data/team_record.csv"
-LOG_COLS    = ["player","date","opponent","home_away","pitcher_hand","pa","ab","hits","doubles","triples","hr","bb","hbp","sf","r","rbi","team_h","team_ab"]
+LOG_COLS    = ["player","date","opponent","home_away","pa","ab","hits","doubles","triples","hr","bb","hbp","sf","r","rbi","pa_vs_r","ab_vs_r","h_vs_r","hr_vs_r","bb_vs_r","hbp_vs_r","sf_vs_r","pa_vs_l","ab_vs_l","h_vs_l","hr_vs_l","bb_vs_l","hbp_vs_l","sf_vs_l","team_h","team_ab"]
 
 # ── CSS ──────────────────────────────────────────────────────────────────────
 st.markdown("""
@@ -55,14 +63,16 @@ def load_log():
         df = pd.read_csv(LOG_PATH)
         for col in LOG_COLS:
             if col not in df.columns:
-                df[col] = 0 if col not in ["home_away","pitcher_hand","opponent","player","date"] else ""
+                df[col] = 0 if col not in ["home_away","opponent","player","date"] else ""
         df["date"] = pd.to_datetime(df["date"]).dt.date
-        for col in ["pa","ab","hits","doubles","triples","hr","bb","hbp","sf","r","rbi","team_h","team_ab"]:
+        int_cols = ["pa","ab","hits","doubles","triples","hr","bb","hbp","sf","r","rbi",
+                    "pa_vs_r","ab_vs_r","h_vs_r","hr_vs_r","bb_vs_r","hbp_vs_r","sf_vs_r",
+                    "pa_vs_l","ab_vs_l","h_vs_l","hr_vs_l","bb_vs_l","hbp_vs_l","sf_vs_l",
+                    "team_h","team_ab"]
+        for col in int_cols:
             df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0).astype(int)
         if "home_away" not in df.columns or df["home_away"].isnull().all():
             df["home_away"] = "Home"
-        if "pitcher_hand" not in df.columns or df["pitcher_hand"].isnull().all():
-            df["pitcher_hand"] = ""
         return df
     return pd.DataFrame(columns=LOG_COLS)
 
@@ -114,10 +124,39 @@ def calc_streak(pdf):
             else: streak_done=True
     return hit_streak, games_since, ab_since, last_hit_date, last_hit_opp
 
-def elapsed_days(d):
+def calc_hand_splits(df):
+    """Calculate BA, OBP, SLG, OPS vs R and vs L pitchers."""
+    def splits(ab, h, hr, bb, hbp, sf):
+        singles = h - hr  # simplified: no 2B/3B split by hand stored
+        tb = singles + 4 * hr  # simplified total bases
+        obp_d = ab + bb + hbp + sf
+        ba_r  = h/ab if ab > 0 else 0
+        obp_r = (h+bb+hbp)/obp_d if obp_d > 0 else 0
+        slg_r = tb/ab if ab > 0 else 0
+        ops_r = obp_r + slg_r
+        def fmt(v): return f"{v:.3f}".lstrip("0") or ".000"
+        return {"ab":ab,"h":h,"hr":hr,"bb":bb,"ba":fmt(ba_r),"obp":fmt(obp_r),"slg":fmt(slg_r),"ops":f"{ops_r:.3f}"}
+    if df.empty:
+        empty = {"ab":0,"h":0,"hr":0,"bb":0,"ba":".000","obp":".000","slg":".000","ops":".000"}
+        return empty, empty
+    vs_r = splits(
+        int(df["ab_vs_r"].sum()), int(df["h_vs_r"].sum()), int(df["hr_vs_r"].sum()),
+        int(df["bb_vs_r"].sum()), int(df["hbp_vs_r"].sum()), int(df["sf_vs_r"].sum())
+    )
+    vs_l = splits(
+        int(df["ab_vs_l"].sum()), int(df["h_vs_l"].sum()), int(df["hr_vs_l"].sum()),
+        int(df["bb_vs_l"].sum()), int(df["hbp_vs_l"].sum()), int(df["sf_vs_l"].sum())
+    )
+    return vs_r, vs_l
     if d is None: return "—"
     delta=(date.today()-d).days
     return "Today" if delta==0 else f"{delta}d ago"
+
+def elapsed_days(d):
+    if d is None: return "—"
+    delta = (date.today() - d).days
+    return "Today" if delta == 0 else f"{delta}d ago"
+
 
 def sparkline_svg(ba_series, width=120, height=32):
     """Generate a tiny SVG sparkline of BA over games."""
@@ -146,9 +185,9 @@ def running_ba(pdf):
 # ── HEADER ───────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="tracker-header">
-    <div class="eyebrow">Philadelphia Phillies</div>
-    <h1>The $85M Hit Drought Tracker</h1>
-    <div class="season">2026 Season</div>
+    <div class="eyebrow">Philadelphia Phillies &nbsp;&middot;&nbsp; 2026 Season</div>
+    <h1>The $97.7M Hit Drought Tracker</h1>
+    <div class="season">📊 Stats updated every Saturday &mdash; or log games yourself in real time using the Log Game tab!</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -188,7 +227,7 @@ with tab_team:
     cba = f"{tot_h/tot_ab:.3f}".lstrip("0") if tot_ab>0 else ".000"
 
     st.markdown('<div style="background:#161616;border:1px solid #2a2a2a;border-radius:12px;padding:16px;margin-bottom:16px">', unsafe_allow_html=True)
-    st.markdown('<div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#e8d5a0;margin-bottom:12px">Combined $85M Production</div>', unsafe_allow_html=True)
+    st.markdown('<div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#e8d5a0;margin-bottom:12px">Combined $97.7M Production</div>', unsafe_allow_html=True)
     p1,p2,p3,p4,p5=st.columns(5)
     p1.metric("BA",cba); p2.metric("H",tot_h); p3.metric("HR",tot_hr); p4.metric("R",tot_r); p5.metric("RBI",tot_rbi)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -199,7 +238,7 @@ with tab_team:
         st.markdown('<div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#e8d5a0;margin-bottom:12px">Core 4 vs. Rest of Lineup</div>', unsafe_allow_html=True)
 
         # Per game comparison — use most recent game date
-        game_dates = sorted(log_df["date"].unique(), reverse=True)
+        game_dates = sorted(log_df["date"].dropna().unique(), reverse=True)
         recent = game_dates[0] if game_dates else None
         if recent:
             recent_df = log_df[log_df["date"]==recent]
@@ -229,7 +268,7 @@ with tab_team:
     hot_count  = sum(1 for v in streaks.values()  if v >= 2)
     cold_count = sum(1 for v in droughts.values() if v >= 3)
     if hot_count >= 3:
-        st.markdown(f'<div style="background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);border-radius:10px;padding:12px 16px;text-align:center;font-size:14px;color:#4ade80;margin-bottom:16px">🔥 The $85M is ON FIRE! ({hot_count}/4 players on a hit streak)</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);border-radius:10px;padding:12px 16px;text-align:center;font-size:14px;color:#4ade80;margin-bottom:16px">🔥 The $97.7M is ON FIRE! ({hot_count}/4 players on a hit streak)</div>', unsafe_allow_html=True)
     elif cold_count >= 3:
         st.markdown(f'<div style="background:rgba(147,197,253,0.1);border:1px solid rgba(147,197,253,0.3);border-radius:10px;padding:12px 16px;text-align:center;font-size:14px;color:#93c5fd;margin-bottom:16px">🧊 You\'re as cold as ice! ({cold_count}/4 players in a hitless drought)</div>', unsafe_allow_html=True)
 
@@ -301,38 +340,62 @@ with tab_players:
         elapsed_str  = elapsed_days(last_hit_date)
         games_ab_str = f"{games_since}G / {ab_since}AB" if games_logged else "—"
 
-        # Sparkline
+        vs_r, vs_l = calc_hand_splits(pdf)
+        has_splits = vs_r["ab"] > 0 or vs_l["ab"] > 0
+
+        # Pre-build all pieces
         ba_series = running_ba(pdf)
         spark = sparkline_svg(ba_series)
-
         drought_bar = f'<div style="background:rgba(200,16,46,0.12);padding:8px 16px;border-top:1px solid rgba(200,16,46,0.2);text-align:center;font-size:12px;color:#c8102e">&#9888; {games_since}-game hitless streak &mdash; {ab_since} AB without a hit</div>' if drought else ""
 
-        html = f"""
-        <div style="background:#161616;border:1px solid {border_color};border-radius:12px;overflow:hidden;margin-bottom:16px;box-shadow:{box_shadow}">
-            <div style="display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid #1f1f1f;gap:12px;position:relative">
-                {spark}
-                <img src="{headshot_url(player)}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid #c8102e;flex-shrink:0;position:relative;z-index:1" onerror="this.style.background='linear-gradient(135deg,#c8102e,#9b0c23)';this.style.minWidth='52px'"/>
-                <div style="flex:1;position:relative;z-index:1">
-                    <div style="font-size:17px;font-weight:700;color:#f0ece4">{player}</div>
-                    <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-top:2px">
-                        {games_logged} games logged &nbsp;·&nbsp; #{PLAYER_NUMBERS[player]} &nbsp; {status_html}
-                    </div>
-                </div>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid #1f1f1f">
-                {stat_cell("Last Hit", last_hit_str, last_hit_sub, True)}
-                {stat_cell("Time Elapsed", elapsed_str, "since last hit", True)}
-                {stat_cell("Games / AB", games_ab_str, "since last hit", False)}
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr">
-                {rate_cell("BA", s["ba"], True)}
-                {rate_cell("HR", s["hr"], True)}
-                {rate_cell("RBI", s["rbi"], True)}
-                {rate_cell("OPS", s["ops"], False)}
-            </div>
-            {drought_bar}
-        </div>
-        """
+        cell_last   = stat_cell("Last Hit",    last_hit_str,  last_hit_sub,     True)
+        cell_elap   = stat_cell("Time Elapsed", elapsed_str,  "since last hit",  True)
+        cell_gab    = stat_cell("Games / AB",   games_ab_str, "since last hit",  False)
+        cell_ba     = rate_cell("BA",  s["ba"],       True)
+        cell_hr     = rate_cell("HR",  str(s["hr"]),  True)
+        cell_rbi    = rate_cell("RBI", str(s["rbi"]), True)
+        cell_ops    = rate_cell("OPS", s["ops"],       False)
+        img_src     = headshot_url(player)
+        num         = PLAYER_NUMBERS[player]
+
+        splits_html = ""
+        if has_splits:
+            splits_html = (
+                f'<div style="display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #1f1f1f">'
+                f'<div style="padding:10px 12px;border-right:1px solid #1f1f1f">'
+                f'<div style="font-size:9px;color:#555;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">vs RHP &nbsp;<span style="color:#666">({vs_r["ab"]}AB)</span></div>'
+                f'<div style="display:flex;gap:12px">'
+                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:9px;color:#555;text-transform:uppercase">BA </span>{vs_r["ba"]}</span>'
+                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:9px;color:#555;text-transform:uppercase">OBP </span>{vs_r["obp"]}</span>'
+                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:9px;color:#555;text-transform:uppercase">SLG </span>{vs_r["slg"]}</span>'
+                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:9px;color:#555;text-transform:uppercase">OPS </span>{vs_r["ops"]}</span>'
+                f'</div></div>'
+                f'<div style="padding:10px 12px">'
+                f'<div style="font-size:9px;color:#555;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">vs LHP &nbsp;<span style="color:#666">({vs_l["ab"]}AB)</span></div>'
+                f'<div style="display:flex;gap:12px">'
+                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:9px;color:#555;text-transform:uppercase">BA </span>{vs_l["ba"]}</span>'
+                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:9px;color:#555;text-transform:uppercase">OBP </span>{vs_l["obp"]}</span>'
+                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:9px;color:#555;text-transform:uppercase">SLG </span>{vs_l["slg"]}</span>'
+                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:9px;color:#555;text-transform:uppercase">OPS </span>{vs_l["ops"]}</span>'
+                f'</div></div>'
+                f'</div>'
+            )
+
+        html = (
+            f'<div style="background:#161616;border:1px solid {border_color};border-radius:12px;overflow:hidden;margin-bottom:16px;box-shadow:{box_shadow}">'
+            f'<div style="display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid #1f1f1f;gap:12px;position:relative">'
+            f'{spark}'
+            f'<img src="{img_src}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid #c8102e;flex-shrink:0;position:relative;z-index:1"/>'
+            f'<div style="flex:1;position:relative;z-index:1">'
+            f'<div style="font-size:17px;font-weight:700;color:#f0ece4">{player}</div>'
+            f'<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-top:2px">{games_logged} games logged &nbsp;&middot;&nbsp; #{num} &nbsp; {status_html}</div>'
+            f'</div></div>'
+            f'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid #1f1f1f">{cell_last}{cell_elap}{cell_gab}</div>'
+            f'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr">{cell_ba}{cell_hr}{cell_rbi}{cell_ops}</div>'
+            f'{splits_html}'
+            f'{drought_bar}'
+            f'</div>'
+        )
         st.markdown(html, unsafe_allow_html=True)
 
 
@@ -409,14 +472,13 @@ with tab_log:
 with tab_entry:
     st.markdown("### ➕ Log a Game")
     with st.form("log_form", clear_on_submit=True):
-        lc1,lc2,lc3,lc4 = st.columns(4)
+        lc1,lc2,lc3 = st.columns(3)
         l_player = lc1.selectbox("Player", PLAYERS)
         l_date   = lc2.date_input("Game Date", value=date.today())
         l_ha     = lc3.selectbox("Home / Away", ["Home","Away"])
-        l_ph     = lc4.selectbox("Pitcher Hand", ["R","L","—"])
         l_opp    = st.text_input("Opponent (e.g. ARI, ATL, NYM)")
 
-        st.markdown("**Player Stats**")
+        st.markdown("**Overall Stats**")
         cc1,cc2,cc3,cc4,cc5 = st.columns(5)
         l_pa  = cc1.number_input("PA", min_value=0,value=0)
         l_ab  = cc2.number_input("AB", min_value=0,value=4)
@@ -431,10 +493,30 @@ with tab_entry:
         l_r   = cc10.number_input("R",  min_value=0,value=0)
         l_rbi = cc11.number_input("RBI",min_value=0,value=0)
 
-        st.markdown("**Team Stats (for Core 4 vs. Team comparison)**")
+        st.markdown("**vs RHP**")
+        rc1,rc2,rc3,rc4,rc5,rc6,rc7 = st.columns(7)
+        l_pa_r  = rc1.number_input("PA",  min_value=0,value=0,key="pa_r")
+        l_ab_r  = rc2.number_input("AB",  min_value=0,value=0,key="ab_r")
+        l_h_r   = rc3.number_input("H",   min_value=0,value=0,key="h_r")
+        l_hr_r  = rc4.number_input("HR",  min_value=0,value=0,key="hr_r")
+        l_bb_r  = rc5.number_input("BB",  min_value=0,value=0,key="bb_r")
+        l_hbp_r = rc6.number_input("HBP", min_value=0,value=0,key="hbp_r")
+        l_sf_r  = rc7.number_input("SF",  min_value=0,value=0,key="sf_r")
+
+        st.markdown("**vs LHP**")
+        lc1b,lc2b,lc3b,lc4b,lc5b,lc6b,lc7b = st.columns(7)
+        l_pa_l  = lc1b.number_input("PA",  min_value=0,value=0,key="pa_l")
+        l_ab_l  = lc2b.number_input("AB",  min_value=0,value=0,key="ab_l")
+        l_h_l   = lc3b.number_input("H",   min_value=0,value=0,key="h_l")
+        l_hr_l  = lc4b.number_input("HR",  min_value=0,value=0,key="hr_l")
+        l_bb_l  = lc5b.number_input("BB",  min_value=0,value=0,key="bb_l")
+        l_hbp_l = lc6b.number_input("HBP", min_value=0,value=0,key="hbp_l")
+        l_sf_l  = lc7b.number_input("SF",  min_value=0,value=0,key="sf_l")
+
+        st.markdown("**Team Stats**")
         tc1,tc2 = st.columns(2)
-        l_th  = tc1.number_input("Team Hits",    min_value=0,value=0)
-        l_tab = tc2.number_input("Team At-Bats",  min_value=0,value=0)
+        l_th  = tc1.number_input("Team Hits",   min_value=0,value=0)
+        l_tab = tc2.number_input("Team At-Bats", min_value=0,value=0)
 
         submitted = st.form_submit_button("⚾ Save Game", use_container_width=True)
         if submitted:
@@ -443,13 +525,14 @@ with tab_entry:
             elif (l_2b+l_3b+l_hr) > l_h: st.error("XBH can't exceed total hits!")
             else:
                 new_row = pd.DataFrame([{
-                    "player":l_player,"date":l_date,"opponent":l_opp.upper(),
-                    "home_away":l_ha,"pitcher_hand":l_ph,
+                    "player":l_player,"date":l_date,"opponent":l_opp.upper(),"home_away":l_ha,
                     "pa":l_pa,"ab":l_ab,"hits":l_h,"doubles":l_2b,"triples":l_3b,
                     "hr":l_hr,"bb":l_bb,"hbp":l_hbp,"sf":l_sf,"r":l_r,"rbi":l_rbi,
+                    "pa_vs_r":l_pa_r,"ab_vs_r":l_ab_r,"h_vs_r":l_h_r,"hr_vs_r":l_hr_r,"bb_vs_r":l_bb_r,"hbp_vs_r":l_hbp_r,"sf_vs_r":l_sf_r,
+                    "pa_vs_l":l_pa_l,"ab_vs_l":l_ab_l,"h_vs_l":l_h_l,"hr_vs_l":l_hr_l,"bb_vs_l":l_bb_l,"hbp_vs_l":l_hbp_l,"sf_vs_l":l_sf_l,
                     "team_h":l_th,"team_ab":l_tab,
                 }])
                 log_df = pd.concat([log_df,new_row],ignore_index=True)
                 save_log(log_df)
-                st.success(f"✅ {l_player} — {l_date} vs {l_opp.upper()} ({l_ha}, vs {l_ph}P) logged!")
+                st.success(f"✅ {l_player} — {l_date} vs {l_opp.upper()} ({l_ha}) logged!")
                 st.rerun()
