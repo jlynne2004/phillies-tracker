@@ -131,19 +131,10 @@ def fetch_player(name, player_id, start_date, end_date):
         triples  = int((events == "triple").sum())
         hr       = int((events == "home_run").sum())
 
-        # Runs scored
-        r = 0
-        if "post_bat_score" in pa_df.columns and "bat_score" in pa_df.columns:
-            pa_df["runs_this_pa"] = (
-                pd.to_numeric(pa_df["post_bat_score"], errors="coerce") -
-                pd.to_numeric(pa_df["bat_score"], errors="coerce")
-            )
-            r = int(pa_df["runs_this_pa"].clip(lower=0).sum())
-
-        # RBI from Statcast batted_rbi field
+        # R and RBI — left as 0 for manual entry from baseball-reference
+        # Statcast doesn't expose these reliably at the PA level
+        r   = 0
         rbi = 0
-        if "batted_rbi" in pa_df.columns:
-            rbi = int(pd.to_numeric(pa_df["batted_rbi"], errors="coerce").fillna(0).sum())
 
         # ── Per-pitcher-hand splits ───────────────────────────────────────────
         if "p_throws" in pa_df.columns:

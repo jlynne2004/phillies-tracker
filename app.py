@@ -227,7 +227,7 @@ with tab_team:
     cba = f"{tot_h/tot_ab:.3f}".lstrip("0") if tot_ab>0 else ".000"
 
     st.markdown('<div style="background:#161616;border:1px solid #2a2a2a;border-radius:12px;padding:16px;margin-bottom:16px">', unsafe_allow_html=True)
-    st.markdown('<div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#e8d5a0;margin-bottom:12px">Combined $85M Production</div>', unsafe_allow_html=True)
+    st.markdown('<div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#e8d5a0;margin-bottom:12px">Combined $97.7M Production</div>', unsafe_allow_html=True)
     p1,p2,p3,p4,p5=st.columns(5)
     p1.metric("BA",cba); p2.metric("H",tot_h); p3.metric("HR",tot_hr); p4.metric("R",tot_r); p5.metric("RBI",tot_rbi)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -268,7 +268,7 @@ with tab_team:
     hot_count  = sum(1 for v in streaks.values()  if v >= 2)
     cold_count = sum(1 for v in droughts.values() if v >= 3)
     if hot_count >= 3:
-        st.markdown(f'<div style="background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);border-radius:10px;padding:12px 16px;text-align:center;font-size:14px;color:#4ade80;margin-bottom:16px">🔥 The $85M is ON FIRE! ({hot_count}/4 players on a hit streak)</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);border-radius:10px;padding:12px 16px;text-align:center;font-size:14px;color:#4ade80;margin-bottom:16px">🔥 The $97.7M is ON FIRE! ({hot_count}/4 players on a hit streak)</div>', unsafe_allow_html=True)
     elif cold_count >= 3:
         st.markdown(f'<div style="background:rgba(147,197,253,0.1);border:1px solid rgba(147,197,253,0.3);border-radius:10px;padding:12px 16px;text-align:center;font-size:14px;color:#93c5fd;margin-bottom:16px">🧊 You\'re as cold as ice! ({cold_count}/4 players in a hitless drought)</div>', unsafe_allow_html=True)
 
