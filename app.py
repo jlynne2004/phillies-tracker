@@ -242,11 +242,11 @@ with tab_team:
         if recent:
             recent_df = log_df[log_df["date"]==recent]
 
-            # Handle doubleheaders — group by game number (rows per player on same date)
-            # Each "game" on a doubleheader date has the same number of player rows
-            # We identify individual games by splitting rows into chunks of 4 (one per player)
-            games_on_date = recent_df[recent_df["player"] == PLAYERS[0]]
-            num_games = len(games_on_date)
+            # Handle doubleheaders — use player with most rows as reference
+            num_games = max(
+                len(recent_df[recent_df["player"] == p])
+                for p in PLAYERS
+            )
 
             if num_games <= 1:
                 # Single game — original logic
@@ -357,10 +357,10 @@ with tab_team:
     ]
 
     RESTRICTED = [
-        {"player": "Johan Rojas", "date_in": "3/16/2026", "reason": "80-game PED suspension", "earliest_return": "6/15/2026"},
+        {"player": "Johan Rojas", "date_in": "3/16/2026", "reason": "80-game PED suspension", "earliest_return": "~6/15/2026"},
     ]
 
-    # ── In Memoriam, IL + Restricted List side by side ────────────────────────────────────────
+    # ── In Memoriam + IL side by side ────────────────────────────────────────
     col_mem, col_il = st.columns(2)
 
     with col_mem:
