@@ -337,16 +337,30 @@ with tab_team:
 
     st.markdown("---")
 
-    # ── In Memoriam & IL Tracker ──────────────────────────────────────────────
+    # ── In Memoriam, IL Tracker & Restricted List ─────────────────────────────
     MEMORIAM = [
-        {"player": "Taijuan Walker",  "date": "4/23/2026", "fate": "DFA'd",   "epitaph": "He gave up runs. Many, many runs."},
-        {"player": "Otto Kemp",       "date": "4/23/2026", "fate": "Demoted", "epitaph": "Gone to the minors. May return in September when hope is all we have left."},
+        {"player": "Taijuan Walker", "date": "4/23/2026", "fate": "DFA'd", "epitaph": "The front office's offseason negligence became his burden to carry. He didn't ask for this. Good luck Taijuan."},
+        # VS Code predicted this on 4/30/2026... we shall see if it comes true...
+        # {"player": "Zack Wheeler", "date": "5/10/2026", "fate": "Traded to Mets", "epitaph": "Betrayed us for the New York money. May he rot in Queens."},
+        {"player": "Rob Thomson", "date": "4/28/2026", "fate": "Fired", "epitaph": "Scapegoat for the sins of the front office. May he find peace and redemption in his next managerial role."},
     ]
 
     IL_TRACKER = [
-        {"player": "J.T. Realmuto", "date_in": "4/22/2026", "reason": "Back spasms", "date_out": "TBD", "games_missed": "—"},
+        {"player": "Zack Wheeler",     "il_type": "15-Day IL", "date_in": "3/22/2026", "reason": "Thoracic outlet depression surgery", "earliest_return": "4/6/2026",  "date_out": "4/25/2026", "games_missed": "27"},
+        {"player": "Orion Kerkering",  "il_type": "15-Day IL", "date_in": "3/22/2026", "reason": "Strained hamstring",                "earliest_return": "4/6/2026",  "date_out": "4/7/2026",  "games_missed": "10"},
+        {"player": "Max Lazar",        "il_type": "60-Day IL", "date_in": "3/22/2026", "reason": "Strained oblique",                  "earliest_return": "5/21/2026", "date_out": "TBD",       "games_missed": "—"},
+        {"player": "Jonathan Bowlan",  "il_type": "15-Day IL", "date_in": "4/13/2026", "reason": "Strained groin",                    "earliest_return": "4/28/2026", "date_out": "4/28/2026", "games_missed": "14"},
+        {"player": "Zach Pop",         "il_type": "15-Day IL", "date_in": "4/13/2026", "reason": "Strained calf",                     "earliest_return": "4/28/2026", "date_out": "TBD",       "games_missed": "—"},
+        {"player": "Jhoan Duran",      "il_type": "15-Day IL", "date_in": "4/15/2026", "reason": "Strained oblique",                  "earliest_return": "4/30/2026", "date_out": "TBD",       "games_missed": "—"},
+        {"player": "J.T. Realmuto",    "il_type": "10-Day IL", "date_in": "4/22/2026", "reason": "Back spasms",                       "earliest_return": "5/2/2026",  "date_out": "TBD",       "games_missed": "—"},
+        {"player": "Kyle Backhus",     "il_type": "15-Day IL", "date_in": "4/27/2026", "reason": "Elbow inflammation",                "earliest_return": "5/12/2026", "date_out": "TBD",       "games_missed": "—"},
     ]
 
+    RESTRICTED = [
+        {"player": "Johan Rojas", "date_in": "3/16/2026", "reason": "80-game PED suspension", "earliest_return": "6/15/2026"},
+    ]
+
+    # ── In Memoriam, IL + Restricted List side by side ────────────────────────────────────────
     col_mem, col_il = st.columns(2)
 
     with col_mem:
@@ -362,7 +376,7 @@ with tab_team:
                     <div style="font-size:11px;color:#c8102e;font-weight:600">{p['fate']}</div>
                 </div>
                 <div style="font-size:11px;color:#888;margin-top:2px">{p['date']}</div>
-                <div style="font-size:11px;color:#666;margin-top:4px;font-style:italic">"{p['epitaph']}"</div>
+                <div style="font-size:11px;color:#777;margin-top:4px;font-style:italic">"{p['epitaph']}"</div>
             </div>
             """, unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
@@ -370,20 +384,39 @@ with tab_team:
     with col_il:
         st.markdown("""
         <div style="background:#161616;border:1px solid #2a2a2a;border-radius:12px;padding:16px;">
-            <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#e8d5a0;margin-bottom:12px">🏥 Injured Reserve</div>
+            <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#e8d5a0;margin-bottom:12px">🏥 Injured List</div>
         """, unsafe_allow_html=True)
         for p in IL_TRACKER:
+            out_str = f"TBD (earliest: {p['earliest_return']})" if p['date_out'] == "TBD" else p['date_out']
+            il_color = "#c8102e" if p['il_type'] == "60-Day IL" else "#e8d5a0"
             st.markdown(f"""
             <div style="border-bottom:1px solid #1f1f1f;padding:10px 0">
                 <div style="display:flex;justify-content:space-between;align-items:center">
-                    <div style="font-size:14px;font-weight:700;color:#f0ece4">{p['player']}</div>
-                    <div style="font-size:11px;color:#e8d5a0;font-weight:600">{p['reason']}</div>
+                    <div style="font-size:14px;font-weight:700;color:#f0ece4">{p['player']} <span style="font-size:11px;font-weight:400;color:{il_color}">({p['il_type']})</span></div>
+                    <div style="font-size:11px;color:#888;font-weight:600">{p['reason']}</div>
                 </div>
-                <div style="font-size:11px;color:#888;margin-top:2px">In: {p['date_in']} · Out: {p['date_out']}</div>
-                <div style="font-size:11px;color:#666;margin-top:2px">Games missed: {p['games_missed']}</div>
+                <div style="font-size:11px;color:#888;margin-top:2px">In: {p['date_in']} · Out: {out_str}</div>
+                <div style="font-size:11px;color:#777;margin-top:2px">Games missed: {p['games_missed']}</div>
             </div>
             """, unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
+
+    # ── Restricted List ───────────────────────────────────────────────────────
+    st.markdown("""
+    <div style="background:#161616;border:1px solid #2a2a2a;border-radius:12px;padding:16px;margin-top:12px;">
+        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#e8d5a0;margin-bottom:12px">🚫 Restricted List</div>
+    """, unsafe_allow_html=True)
+    for p in RESTRICTED:
+        st.markdown(f"""
+        <div style="border-bottom:1px solid #1f1f1f;padding:10px 0">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+                <div style="font-size:14px;font-weight:700;color:#f0ece4">{p['player']}</div>
+                <div style="font-size:11px;color:#c8102e;font-weight:600">{p['reason']}</div>
+            </div>
+            <div style="font-size:11px;color:#888;margin-top:2px">Since: {p['date_in']} · Earliest return: {p['earliest_return']}</div>
+        </div>
+        """, unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
