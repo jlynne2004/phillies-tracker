@@ -237,29 +237,60 @@ with tab_team:
         st.markdown('<div style="background:#161616;border:1px solid #2a2a2a;border-radius:12px;padding:16px;margin-bottom:16px">', unsafe_allow_html=True)
         st.markdown('<div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#e8d5a0;margin-bottom:12px">Core 4 vs. Rest of Lineup</div>', unsafe_allow_html=True)
 
-        # Per game comparison — use most recent game date
         game_dates = sorted(log_df["date"].dropna().unique(), reverse=True)
         recent = game_dates[0] if game_dates else None
         if recent:
             recent_df = log_df[log_df["date"]==recent]
-            c4_h  = recent_df["hits"].sum()
-            c4_ab = recent_df["ab"].sum()
-            t_h   = recent_df["team_h"].sum() // max(len(recent_df),1) * 4  # avg team H scaled
-            t_ab  = recent_df["team_ab"].sum() // max(len(recent_df),1) * 4
-            # Use actual team totals from first row (same game)
-            if len(recent_df) > 0:
-                t_h  = int(recent_df["team_h"].iloc[0])
-                t_ab = int(recent_df["team_ab"].iloc[0])
-            rest_h  = t_h  - c4_h
-            rest_ab = t_ab - c4_ab
-            c4_ba   = f"{c4_h/c4_ab:.3f}".lstrip("0") if c4_ab>0 else ".000"
-            rest_ba = f"{rest_h/rest_ab:.3f}".lstrip("0") if rest_ab>0 else ".000"
-            team_ba = f"{t_h/t_ab:.3f}".lstrip("0") if t_ab>0 else ".000"
-            st.markdown(f'<div style="font-size:11px;color:#666;margin-bottom:8px">Most recent game: {recent}</div>', unsafe_allow_html=True)
-            cc1,cc2,cc3=st.columns(3)
-            cc1.metric("Core 4 BA", c4_ba, f"{c4_h}H / {c4_ab}AB")
-            cc2.metric("Rest of Lineup", rest_ba, f"{rest_h}H / {rest_ab}AB")
-            cc3.metric("Full Team", team_ba, f"{t_h}H / {t_ab}AB")
+
+            # Handle doubleheaders — group by game number (rows per player on same date)
+            # Each "game" on a doubleheader date has the same number of player rows
+            # We identify individual games by splitting rows into chunks of 4 (one per player)
+            games_on_date = recent_df[recent_df["player"] == PLAYERS[0]]
+            num_games = len(games_on_date)
+
+            if num_games <= 1:
+                # Single game — original logic
+                c4_h  = recent_df["hits"].sum()
+                c4_ab = recent_df["ab"].sum()
+                t_h   = int(recent_df["team_h"].iloc[0]) if len(recent_df) > 0 else 0
+                t_ab  = int(recent_df["team_ab"].iloc[0]) if len(recent_df) > 0 else 0
+                rest_h  = t_h - c4_h
+                rest_ab = t_ab - c4_ab
+                c4_ba   = f"{c4_h/c4_ab:.3f}".lstrip("0") if c4_ab>0 else ".000"
+                rest_ba = f"{rest_h/rest_ab:.3f}".lstrip("0") if rest_ab>0 else ".000"
+                team_ba = f"{t_h/t_ab:.3f}".lstrip("0") if t_ab>0 else ".000"
+                st.markdown(f'<div style="font-size:11px;color:#888;margin-bottom:8px">Most recent game: {recent}</div>', unsafe_allow_html=True)
+                gc1,gc2,gc3 = st.columns(3)
+                gc1.metric("Core 4 BA", c4_ba, f"{c4_h}H / {c4_ab}AB")
+                gc2.metric("Rest of Lineup", rest_ba, f"{rest_h}H / {rest_ab}AB")
+                gc3.metric("Full Team", team_ba, f"{t_h}H / {t_ab}AB")
+            else:
+                # Doubleheader — show each game separately
+                st.markdown(f'<div style="font-size:11px;color:#888;margin-bottom:12px">Doubleheader: {recent} ({num_games} games)</div>', unsafe_allow_html=True)
+                for game_num in range(num_games):
+                    # Get the nth row for each player (game_num index)
+                    game_rows = []
+                    for player in PLAYERS:
+                        player_rows = recent_df[recent_df["player"]==player]
+                        if game_num < len(player_rows):
+                            game_rows.append(player_rows.iloc[game_num])
+                    if not game_rows:
+                        continue
+                    game_df = pd.DataFrame(game_rows)
+                    c4_h  = int(game_df["hits"].sum())
+                    c4_ab = int(game_df["ab"].sum())
+                    t_h   = int(game_df["team_h"].iloc[0]) if len(game_df) > 0 else 0
+                    t_ab  = int(game_df["team_ab"].iloc[0]) if len(game_df) > 0 else 0
+                    rest_h  = t_h - c4_h
+                    rest_ab = t_ab - c4_ab
+                    c4_ba   = f"{c4_h/c4_ab:.3f}".lstrip("0") if c4_ab>0 else ".000"
+                    rest_ba = f"{rest_h/rest_ab:.3f}".lstrip("0") if rest_ab>0 else ".000"
+                    team_ba = f"{t_h/t_ab:.3f}".lstrip("0") if t_ab>0 else ".000"
+                    st.markdown(f'<div style="font-size:11px;color:#e8d5a0;margin-bottom:6px;margin-top:8px">Game {game_num+1}</div>', unsafe_allow_html=True)
+                    gc1,gc2,gc3 = st.columns(3)
+                    gc1.metric("Core 4 BA", c4_ba, f"{c4_h}H / {c4_ab}AB")
+                    gc2.metric("Rest of Lineup", rest_ba, f"{rest_h}H / {rest_ab}AB")
+                    gc3.metric("Full Team", team_ba, f"{t_h}H / {t_ab}AB")
         st.markdown('</div>', unsafe_allow_html=True)
 
     # Team hot/cold indicator
@@ -293,7 +324,7 @@ with tab_team:
             <img src="{headshot_url(player)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid #c8102e;flex-shrink:0" onerror="this.style.display='none'"/>
             <div style="flex:1">
                 <div style="font-size:15px;font-weight:700;color:#f0ece4">{player.split()[-1]}</div>
-                <div style="font-size:11px;color:#555;margin-top:2px">{s['h']}H · {s['hr']}HR · {s['rbi']}RBI · {s['bb']}BB</div>
+                <div style="font-size:11px;color:#888;margin-top:2px">{s['h']}H · {s['hr']}HR · {s['rbi']}RBI · {s['bb']}BB</div>
             </div>
             <div style="font-size:24px;font-weight:700;color:{c}">{val}</div>
         </div>
@@ -304,6 +335,56 @@ with tab_team:
         csv = log_df.to_csv(index=False)
         st.download_button("⬇️ Export to CSV", csv, "phillies_hit_tracker_2026.csv", "text/csv", use_container_width=True)
 
+    st.markdown("---")
+
+    # ── In Memoriam & IL Tracker ──────────────────────────────────────────────
+    MEMORIAM = [
+        {"player": "Taijuan Walker",  "date": "4/23/2026", "fate": "DFA'd",   "epitaph": "He gave up runs. Many, many runs."},
+        {"player": "Otto Kemp",       "date": "4/23/2026", "fate": "Demoted", "epitaph": "Gone to the minors. May return in September when hope is all we have left."},
+    ]
+
+    IL_TRACKER = [
+        {"player": "J.T. Realmuto", "date_in": "4/22/2026", "reason": "Back spasms", "date_out": "TBD", "games_missed": "—"},
+    ]
+
+    col_mem, col_il = st.columns(2)
+
+    with col_mem:
+        st.markdown("""
+        <div style="background:#161616;border:1px solid #2a2a2a;border-radius:12px;padding:16px;">
+            <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#e8d5a0;margin-bottom:12px">🪦 In Memoriam</div>
+        """, unsafe_allow_html=True)
+        for p in MEMORIAM:
+            st.markdown(f"""
+            <div style="border-bottom:1px solid #1f1f1f;padding:10px 0">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                    <div style="font-size:14px;font-weight:700;color:#f0ece4">{p['player']}</div>
+                    <div style="font-size:11px;color:#c8102e;font-weight:600">{p['fate']}</div>
+                </div>
+                <div style="font-size:11px;color:#888;margin-top:2px">{p['date']}</div>
+                <div style="font-size:11px;color:#666;margin-top:4px;font-style:italic">"{p['epitaph']}"</div>
+            </div>
+            """, unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with col_il:
+        st.markdown("""
+        <div style="background:#161616;border:1px solid #2a2a2a;border-radius:12px;padding:16px;">
+            <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#e8d5a0;margin-bottom:12px">🏥 Injured Reserve</div>
+        """, unsafe_allow_html=True)
+        for p in IL_TRACKER:
+            st.markdown(f"""
+            <div style="border-bottom:1px solid #1f1f1f;padding:10px 0">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                    <div style="font-size:14px;font-weight:700;color:#f0ece4">{p['player']}</div>
+                    <div style="font-size:11px;color:#e8d5a0;font-weight:600">{p['reason']}</div>
+                </div>
+                <div style="font-size:11px;color:#888;margin-top:2px">In: {p['date_in']} · Out: {p['date_out']}</div>
+                <div style="font-size:11px;color:#666;margin-top:2px">Games missed: {p['games_missed']}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PLAYERS TAB
@@ -311,11 +392,11 @@ with tab_team:
 with tab_players:
     def stat_cell(lbl, val, sub="", border=True):
         br = "1px solid #1f1f1f" if border else "none"
-        return f'<div style="padding:12px 10px;text-align:center;border-right:{br}"><div style="font-size:9px;color:#555;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">{lbl}</div><div style="font-size:13px;font-weight:bold;color:#f0ece4">{val}</div><div style="font-size:9px;color:#444;margin-top:2px">{sub}</div></div>'
+        return f'<div style="padding:12px 10px;text-align:center;border-right:{br}"><div style="font-size:11px;color:#888;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">{lbl}</div><div style="font-size:13px;font-weight:bold;color:#f0ece4">{val}</div><div style="font-size:11px;color:#777;margin-top:2px">{sub}</div></div>'
 
     def rate_cell(lbl, val, border=True):
         br = "1px solid #1f1f1f" if border else "none"
-        return f'<div style="padding:10px 6px;text-align:center;border-right:{br}"><div style="font-size:9px;color:#555;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">{lbl}</div><div style="font-size:15px;font-weight:bold;color:#e8d5a0">{val}</div></div>'
+        return f'<div style="padding:10px 6px;text-align:center;border-right:{br}"><div style="font-size:11px;color:#888;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">{lbl}</div><div style="font-size:15px;font-weight:bold;color:#e8d5a0">{val}</div></div>'
 
     for player in PLAYERS:
         pdf = log_df[log_df["player"]==player].copy()
@@ -363,20 +444,20 @@ with tab_players:
             splits_html = (
                 f'<div style="display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #1f1f1f">'
                 f'<div style="padding:10px 12px;border-right:1px solid #1f1f1f">'
-                f'<div style="font-size:9px;color:#555;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">vs RHP &nbsp;<span style="color:#666">({vs_r["ab"]}AB)</span></div>'
+                f'<div style="font-size:11px;color:#888;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">vs RHP &nbsp;<span style="color:#777">({vs_r["ab"]}AB)</span></div>'
                 f'<div style="display:flex;gap:12px">'
-                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:9px;color:#555;text-transform:uppercase">BA </span>{vs_r["ba"]}</span>'
-                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:9px;color:#555;text-transform:uppercase">OBP </span>{vs_r["obp"]}</span>'
-                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:9px;color:#555;text-transform:uppercase">SLG </span>{vs_r["slg"]}</span>'
-                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:9px;color:#555;text-transform:uppercase">OPS </span>{vs_r["ops"]}</span>'
+                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:11px;color:#888;text-transform:uppercase">BA </span>{vs_r["ba"]}</span>'
+                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:11px;color:#888;text-transform:uppercase">OBP </span>{vs_r["obp"]}</span>'
+                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:11px;color:#888;text-transform:uppercase">SLG </span>{vs_r["slg"]}</span>'
+                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:11px;color:#888;text-transform:uppercase">OPS </span>{vs_r["ops"]}</span>'
                 f'</div></div>'
                 f'<div style="padding:10px 12px">'
-                f'<div style="font-size:9px;color:#555;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">vs LHP &nbsp;<span style="color:#666">({vs_l["ab"]}AB)</span></div>'
+                f'<div style="font-size:11px;color:#888;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">vs LHP &nbsp;<span style="color:#777">({vs_l["ab"]}AB)</span></div>'
                 f'<div style="display:flex;gap:12px">'
-                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:9px;color:#555;text-transform:uppercase">BA </span>{vs_l["ba"]}</span>'
-                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:9px;color:#555;text-transform:uppercase">OBP </span>{vs_l["obp"]}</span>'
-                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:9px;color:#555;text-transform:uppercase">SLG </span>{vs_l["slg"]}</span>'
-                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:9px;color:#555;text-transform:uppercase">OPS </span>{vs_l["ops"]}</span>'
+                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:11px;color:#888;text-transform:uppercase">BA </span>{vs_l["ba"]}</span>'
+                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:11px;color:#888;text-transform:uppercase">OBP </span>{vs_l["obp"]}</span>'
+                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:11px;color:#888;text-transform:uppercase">SLG </span>{vs_l["slg"]}</span>'
+                f'<span style="font-size:12px;color:#e8d5a0"><span style="font-size:11px;color:#888;text-transform:uppercase">OPS </span>{vs_l["ops"]}</span>'
                 f'</div></div>'
                 f'</div>'
             )
@@ -388,7 +469,7 @@ with tab_players:
             f'<img src="{img_src}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid #c8102e;flex-shrink:0;position:relative;z-index:1"/>'
             f'<div style="flex:1;position:relative;z-index:1">'
             f'<div style="font-size:17px;font-weight:700;color:#f0ece4">{player}</div>'
-            f'<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-top:2px">{games_logged} games logged &nbsp;&middot;&nbsp; #{num} &nbsp; {status_html}</div>'
+            f'<div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-top:2px">{games_logged} games logged &nbsp;&middot;&nbsp; #{num} &nbsp; {status_html}</div>'
             f'</div></div>'
             f'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid #1f1f1f">{cell_last}{cell_elap}{cell_gab}</div>'
             f'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr">{cell_ba}{cell_hr}{cell_rbi}{cell_ops}</div>'
