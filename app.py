@@ -340,8 +340,6 @@ with tab_team:
     # ── In Memoriam, IL Tracker & Restricted List ─────────────────────────────
     MEMORIAM = [
         {"player": "Taijuan Walker", "date": "4/23/2026", "fate": "DFA'd", "epitaph": "The front office's offseason negligence became his burden to carry. He didn't ask for this. Good luck Taijuan."},
-        # VS Code predicted this on 4/30/2026... we shall see if it comes true...
-        # {"player": "Zack Wheeler", "date": "5/10/2026", "fate": "Traded to Mets", "epitaph": "Betrayed us for the New York money. May he rot in Queens."},
         {"player": "Rob Thomson", "date": "4/28/2026", "fate": "Fired", "epitaph": "Scapegoat for the sins of the front office. May he find peace and redemption in his next managerial role."},
     ]
 
@@ -351,8 +349,8 @@ with tab_team:
         {"player": "Max Lazar",        "il_type": "60-Day IL", "date_in": "3/22/2026", "reason": "Strained oblique",                  "earliest_return": "5/21/2026", "date_out": "TBD",       "games_missed": "—"},
         {"player": "Jonathan Bowlan",  "il_type": "15-Day IL", "date_in": "4/13/2026", "reason": "Strained groin",                    "earliest_return": "4/28/2026", "date_out": "4/28/2026", "games_missed": "14"},
         {"player": "Zach Pop",         "il_type": "15-Day IL", "date_in": "4/13/2026", "reason": "Strained calf",                     "earliest_return": "4/28/2026", "date_out": "TBD",       "games_missed": "—"},
-        {"player": "Jhoan Duran",      "il_type": "15-Day IL", "date_in": "4/15/2026", "reason": "Strained oblique",                  "earliest_return": "4/30/2026", "date_out": "TBD",       "games_missed": "—"},
-        {"player": "J.T. Realmuto",    "il_type": "10-Day IL", "date_in": "4/22/2026", "reason": "Back spasms",                       "earliest_return": "5/2/2026",  "date_out": "TBD",       "games_missed": "—"},
+        {"player": "Jhoan Duran",      "il_type": "15-Day IL", "date_in": "4/15/2026", "reason": "Strained oblique",                  "earliest_return": "4/30/2026", "date_out": "5/5/2026",  "games_missed": "—"},
+        {"player": "J.T. Realmuto",    "il_type": "10-Day IL", "date_in": "4/22/2026", "reason": "Back spasms",                       "earliest_return": "5/2/2026",  "date_out": "5/2/2026",  "games_missed": "—"},
         {"player": "Kyle Backhus",     "il_type": "15-Day IL", "date_in": "4/27/2026", "reason": "Elbow inflammation",                "earliest_return": "5/12/2026", "date_out": "TBD",       "games_missed": "—"},
     ]
 
