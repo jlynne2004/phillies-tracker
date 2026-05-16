@@ -31,7 +31,7 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Source+Sans+3:wght@400;600&display=swap');
 html, body, [class*="css"] { font-family: 'Source Sans 3', sans-serif; }
-.stApp { background-color: #f8f8f8; color: #1a1a1a; }
+.stApp { background-color: #f0f0f0; color: #1a1a1a; }
 .tracker-header {
     background: linear-gradient(135deg, #c8102e 0%, #9b0c23 60%, #6e0018 100%);
     padding: 28px 32px 22px; border-bottom: 3px solid #e8d5a0;
@@ -46,7 +46,7 @@ div[data-testid="stMetric"] div[data-testid="stMetricValue"] { color:#1a1a1a !im
 .stTabs [data-baseweb="tab-list"] { background:#fff; border-bottom:1px solid #e0e0e0; }
 .stTabs [data-baseweb="tab"] { color:#999; font-size:12px; letter-spacing:1.5px; text-transform:uppercase; }
 .stTabs [aria-selected="true"] { color:#c8102e !important; border-bottom:2px solid #c8102e !important; }
-.stTabs [data-baseweb="tab-panel"] { background:#f8f8f8; padding-top:16px; }
+.stTabs [data-baseweb="tab-panel"] { background:#f0f0f0; padding-top:16px; }
 div[data-testid="stFormSubmitButton"] button {
     background: linear-gradient(135deg,#c8102e,#9b0c23) !important;
     color:white !important; border:none !important; border-radius:8px !important; width:100%; font-weight:600;
