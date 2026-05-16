@@ -31,7 +31,7 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Source+Sans+3:wght@400;600&display=swap');
 html, body, [class*="css"] { font-family: 'Source Sans 3', sans-serif; }
-.stApp { background-color: #f0f0f0; color: #1a1a1a; }
+.stApp { background-color: #2b2b2b; color: #f0ece4; }
 .tracker-header {
     background: linear-gradient(135deg, #c8102e 0%, #9b0c23 60%, #6e0018 100%);
     padding: 28px 32px 22px; border-bottom: 3px solid #e8d5a0;
@@ -40,19 +40,19 @@ html, body, [class*="css"] { font-family: 'Source Sans 3', sans-serif; }
 .tracker-header .eyebrow { font-size:11px; letter-spacing:4px; text-transform:uppercase; color:#c8102e; margin-bottom:6px; }
 .tracker-header h1 { font-family:'Playfair Display',serif; font-size:2.2rem; color:#fff; margin:0 0 4px 0; line-height:1.1; }
 .tracker-header .season { font-size:12px; color:rgba(255,255,255,0.75); letter-spacing:1px; }
-div[data-testid="stMetric"] { background:#ffffff; border:1px solid #e0e0e0; border-radius:8px; padding:12px; }
+div[data-testid="stMetric"] { background:#333333; border:1px solid #444; border-radius:8px; padding:12px; }
 div[data-testid="stMetric"] label { color:#888 !important; font-size:11px !important; text-transform:uppercase; letter-spacing:1px; }
-div[data-testid="stMetric"] div[data-testid="stMetricValue"] { color:#1a1a1a !important; font-size:22px !important; }
-.stTabs [data-baseweb="tab-list"] { background:#fff; border-bottom:1px solid #e0e0e0; }
-.stTabs [data-baseweb="tab"] { color:#999; font-size:12px; letter-spacing:1.5px; text-transform:uppercase; }
-.stTabs [aria-selected="true"] { color:#c8102e !important; border-bottom:2px solid #c8102e !important; }
-.stTabs [data-baseweb="tab-panel"] { background:#f0f0f0; padding-top:16px; }
+div[data-testid="stMetric"] div[data-testid="stMetricValue"] { color:#f0ece4 !important; font-size:22px !important; }
+.stTabs [data-baseweb="tab-list"] { background:#fff; border-bottom:1px solid #444; }
+.stTabs [data-baseweb="tab"] { color:#888; font-size:12px; letter-spacing:1.5px; text-transform:uppercase; }
+.stTabs [aria-selected="true"] { color:#e8d5a0 !important; border-bottom:2px solid #c8102e !important; }
+.stTabs [data-baseweb="tab-panel"] { background:#2b2b2b; padding-top:16px; }
 div[data-testid="stFormSubmitButton"] button {
     background: linear-gradient(135deg,#c8102e,#9b0c23) !important;
     color:white !important; border:none !important; border-radius:8px !important; width:100%; font-weight:600;
 }
-.stButton button { background:#ffffff !important; color:#999 !important; border:1px solid #ddd !important; border-radius:8px !important; }
-.stButton button:hover { border-color:#c8102e !important; color:#c8102e !important; }
+.stButton button { background:#333333 !important; color:#888 !important; border:1px solid #555 !important; border-radius:8px !important; }
+.stButton button:hover { border-color:#e8d5a0 !important; color:#e8d5a0 !important; }
 hr { border-color: #e0e0e0; }
 #MainMenu {visibility:hidden;} footer {visibility:hidden;} header {visibility:hidden;}
 </style>
@@ -202,7 +202,7 @@ tab_team, tab_players, tab_log, tab_entry = st.tabs(["🏆 Team", "⚾ Players",
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_team:
     # Record
-    st.markdown('<div style="background:#ffffff;border:1px solid #e0e0e0;border-radius:12px;padding:16px;margin-bottom:16px">', unsafe_allow_html=True)
+    st.markdown('<div style="background:#333333;border:1px solid #444;border-radius:12px;padding:16px;margin-bottom:16px">', unsafe_allow_html=True)
     st.markdown('<div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#c8102e;margin-bottom:12px">2026 Team Record</div>', unsafe_allow_html=True)
     c1,c2,c3 = st.columns(3)
     c1.metric("Wins", wins)
@@ -227,7 +227,7 @@ with tab_team:
     tot_rbi=sum(s["rbi"] for s in all_stats.values())
     cba = f"{tot_h/tot_ab:.3f}".lstrip("0") if tot_ab>0 else ".000"
 
-    st.markdown('<div style="background:#ffffff;border:1px solid #e0e0e0;border-radius:12px;padding:16px;margin-bottom:16px">', unsafe_allow_html=True)
+    st.markdown('<div style="background:#333333;border:1px solid #444;border-radius:12px;padding:16px;margin-bottom:16px">', unsafe_allow_html=True)
     st.markdown('<div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#c8102e;margin-bottom:12px">Combined $97.7M Production</div>', unsafe_allow_html=True)
     p1,p2,p3,p4,p5=st.columns(5)
     p1.metric("BA",cba); p2.metric("H",tot_h); p3.metric("HR",tot_hr); p4.metric("R",tot_r); p5.metric("RBI",tot_rbi)
@@ -235,7 +235,7 @@ with tab_team:
 
     # Core 4 vs Team comparison
     if not log_df.empty and "team_ab" in log_df.columns and log_df["team_ab"].sum() > 0:
-        st.markdown('<div style="background:#ffffff;border:1px solid #e0e0e0;border-radius:12px;padding:16px;margin-bottom:16px">', unsafe_allow_html=True)
+        st.markdown('<div style="background:#333333;border:1px solid #444;border-radius:12px;padding:16px;margin-bottom:16px">', unsafe_allow_html=True)
         st.markdown('<div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#c8102e;margin-bottom:12px">Core 4 vs. Rest of Lineup</div>', unsafe_allow_html=True)
 
         game_dates = sorted(log_df["date"].dropna().unique(), reverse=True)
@@ -305,7 +305,7 @@ with tab_team:
         st.markdown(f'<div style="background:rgba(147,197,253,0.12);border:1px solid rgba(147,197,253,0.3);border-radius:10px;padding:12px 16px;text-align:center;font-size:14px;color:#93c5fd;margin-bottom:16px">🧊 You\'re as cold as ice! ({cold_count}/4 players in a hitless drought)</div>', unsafe_allow_html=True)
 
     # Leaderboard
-    st.markdown('<div style="background:#ffffff;border:1px solid #e0e0e0;border-radius:12px;padding:16px;margin-bottom:16px">', unsafe_allow_html=True)
+    st.markdown('<div style="background:#333333;border:1px solid #444;border-radius:12px;padding:16px;margin-bottom:16px">', unsafe_allow_html=True)
     st.markdown('<div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#c8102e;margin-bottom:12px">Leaderboard</div>', unsafe_allow_html=True)
     lb_stat = st.radio("Sort by", ["BA","OBP","SLG","OPS"], horizontal=True, label_visibility="collapsed")
     stat_key = {"BA":"ba_raw","OBP":"obp_raw","SLG":"slg_raw","OPS":"ops_raw"}[lb_stat]
@@ -320,11 +320,11 @@ with tab_team:
         elif lb_stat=="SLG": c="#4ade80" if val_raw>=0.450 else ("#e8d5a0" if val_raw>=0.380 else "#c8102e")
         else:                c="#4ade80" if val_raw>=0.800 else ("#e8d5a0" if val_raw>=0.680 else "#c8102e")
         st.markdown(f"""
-        <div style="display:flex;align-items:center;padding:12px 8px;border-bottom:1px solid #eeeeee;gap:12px">
+        <div style="display:flex;align-items:center;padding:12px 8px;border-bottom:1px solid #444;gap:12px">
             <div style="font-size:20px;width:28px">{medals[rank]}</div>
             <img src="{headshot_url(player)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid #c8102e;flex-shrink:0" onerror="this.style.display='none'"/>
             <div style="flex:1">
-                <div style="font-size:15px;font-weight:700;color:#1a1a1a">{player.split()[-1]}</div>
+                <div style="font-size:15px;font-weight:700;color:#f0ece4">{player.split()[-1]}</div>
                 <div style="font-size:11px;color:#888;margin-top:2px">{s['h']}H · {s['hr']}HR · {s['rbi']}RBI · {s['bb']}BB</div>
             </div>
             <div style="font-size:24px;font-weight:700;color:{c}">{val}</div>
@@ -359,14 +359,14 @@ with tab_team:
 
     with col_mem:
         st.markdown("""
-        <div style="background:#ffffff;border:1px solid #e0e0e0;border-radius:12px;padding:16px;">
+        <div style="background:#333333;border:1px solid #444;border-radius:12px;padding:16px;">
             <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#c8102e;margin-bottom:12px">🪦 In Memoriam</div>
         """, unsafe_allow_html=True)
         for p in MEMORIAM:
             st.markdown(f"""
-            <div style="border-bottom:1px solid #eeeeee;padding:10px 0">
+            <div style="border-bottom:1px solid #444;padding:10px 0">
                 <div style="display:flex;justify-content:space-between;align-items:center">
-                    <div style="font-size:14px;font-weight:700;color:#1a1a1a">{p['player']}</div>
+                    <div style="font-size:14px;font-weight:700;color:#f0ece4">{p['player']}</div>
                     <div style="font-size:11px;color:#c8102e;font-weight:600">{p['fate']}</div>
                 </div>
                 <div style="font-size:11px;color:#888;margin-top:2px">{p['date']}</div>
@@ -377,16 +377,16 @@ with tab_team:
 
     with col_il:
         st.markdown("""
-        <div style="background:#ffffff;border:1px solid #e0e0e0;border-radius:12px;padding:16px;">
+        <div style="background:#333333;border:1px solid #444;border-radius:12px;padding:16px;">
             <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#c8102e;margin-bottom:12px">🏥 Injured List</div>
         """, unsafe_allow_html=True)
         for p in IL_TRACKER:
             out_str = f"TBD (earliest: {p['earliest_return']})" if p['date_out'] == "TBD" else p['date_out']
             il_color = "#c8102e" if p['il_type'] == "60-Day IL" else "#e8d5a0"
             st.markdown(f"""
-            <div style="border-bottom:1px solid #eeeeee;padding:10px 0">
+            <div style="border-bottom:1px solid #444;padding:10px 0">
                 <div style="display:flex;justify-content:space-between;align-items:center">
-                    <div style="font-size:14px;font-weight:700;color:#1a1a1a">{p['player']} <span style="font-size:11px;font-weight:400;color:{il_color}">({p['il_type']})</span></div>
+                    <div style="font-size:14px;font-weight:700;color:#f0ece4">{p['player']} <span style="font-size:11px;font-weight:400;color:{il_color}">({p['il_type']})</span></div>
                     <div style="font-size:11px;color:#888;font-weight:600">{p['reason']}</div>
                 </div>
                 <div style="font-size:11px;color:#888;margin-top:2px">In: {p['date_in']} · Out: {out_str}</div>
@@ -397,14 +397,14 @@ with tab_team:
 
     # ── Restricted List ───────────────────────────────────────────────────────
     st.markdown("""
-    <div style="background:#ffffff;border:1px solid #e0e0e0;border-radius:12px;padding:16px;margin-top:12px;">
+    <div style="background:#333333;border:1px solid #444;border-radius:12px;padding:16px;margin-top:12px;">
         <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#c8102e;margin-bottom:12px">🚫 Restricted List</div>
     """, unsafe_allow_html=True)
     for p in RESTRICTED:
         st.markdown(f"""
-        <div style="border-bottom:1px solid #eeeeee;padding:10px 0">
+        <div style="border-bottom:1px solid #444;padding:10px 0">
             <div style="display:flex;justify-content:space-between;align-items:center">
-                <div style="font-size:14px;font-weight:700;color:#1a1a1a">{p['player']}</div>
+                <div style="font-size:14px;font-weight:700;color:#f0ece4">{p['player']}</div>
                 <div style="font-size:11px;color:#c8102e;font-weight:600">{p['reason']}</div>
             </div>
             <div style="font-size:11px;color:#888;margin-top:2px">Since: {p['date_in']} · Earliest return: {p['earliest_return']}</div>
@@ -419,7 +419,7 @@ with tab_team:
 with tab_players:
     def stat_cell(lbl, val, sub="", border=True):
         br = "1px solid #1f1f1f" if border else "none"
-        return f'<div style="padding:12px 10px;text-align:center;border-right:{br}"><div style="font-size:11px;color:#888;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">{lbl}</div><div style="font-size:13px;font-weight:bold;color:#1a1a1a">{val}</div><div style="font-size:11px;color:#888;margin-top:2px">{sub}</div></div>'
+        return f'<div style="padding:12px 10px;text-align:center;border-right:{br}"><div style="font-size:11px;color:#888;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">{lbl}</div><div style="font-size:13px;font-weight:bold;color:#f0ece4">{val}</div><div style="font-size:11px;color:#888;margin-top:2px">{sub}</div></div>'
 
     def rate_cell(lbl, val, border=True):
         br = "1px solid #1f1f1f" if border else "none"
@@ -469,8 +469,8 @@ with tab_players:
         splits_html = ""
         if has_splits:
             splits_html = (
-                f'<div style="display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #eeeeee">'
-                f'<div style="padding:10px 12px;border-right:1px solid #eeeeee">'
+                f'<div style="display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #444">'
+                f'<div style="padding:10px 12px;border-right:1px solid #444">'
                 f'<div style="font-size:11px;color:#888;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">vs RHP &nbsp;<span style="color:#888">({vs_r["ab"]}AB)</span></div>'
                 f'<div style="display:flex;gap:12px">'
                 f'<span style="font-size:12px;color:#c8102e"><span style="font-size:11px;color:#888;text-transform:uppercase">BA </span>{vs_r["ba"]}</span>'
@@ -490,15 +490,15 @@ with tab_players:
             )
 
         html = (
-            f'<div style="background:#ffffff;border:1px solid {border_color};border-radius:12px;overflow:hidden;margin-bottom:16px;box-shadow:{box_shadow}">'
-            f'<div style="display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid #eeeeee;gap:12px;position:relative">'
+            f'<div style="background:#333333;border:1px solid {border_color};border-radius:12px;overflow:hidden;margin-bottom:16px;box-shadow:{box_shadow}">'
+            f'<div style="display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid #444;gap:12px;position:relative">'
             f'{spark}'
             f'<img src="{img_src}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid #c8102e;flex-shrink:0;position:relative;z-index:1"/>'
             f'<div style="flex:1;position:relative;z-index:1">'
-            f'<div style="font-size:17px;font-weight:700;color:#1a1a1a">{player}</div>'
+            f'<div style="font-size:17px;font-weight:700;color:#f0ece4">{player}</div>'
             f'<div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-top:2px">{games_logged} games logged &nbsp;&middot;&nbsp; #{num} &nbsp; {status_html}</div>'
             f'</div></div>'
-            f'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid #eeeeee">{cell_last}{cell_elap}{cell_gab}</div>'
+            f'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid #444">{cell_last}{cell_elap}{cell_gab}</div>'
             f'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr">{cell_ba}{cell_hr}{cell_rbi}{cell_ops}</div>'
             f'{splits_html}'
             f'{drought_bar}'
