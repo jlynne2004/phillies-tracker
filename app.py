@@ -37,13 +37,13 @@ html, body, [class*="css"] { font-family: 'Source Sans 3', sans-serif; }
     padding: 28px 32px 22px; border-bottom: 3px solid #e8d5a0;
     margin: -1rem -1rem 1.5rem -1rem;
 }
-.tracker-header .eyebrow { font-size:11px; letter-spacing:4px; text-transform:uppercase; color:#c8102e; margin-bottom:6px; }
+.tracker-header .eyebrow { font-size:11px; letter-spacing:4px; text-transform:uppercase; color:#e8d5a0; margin-bottom:6px; }
 .tracker-header h1 { font-family:'Playfair Display',serif; font-size:2.2rem; color:#fff; margin:0 0 4px 0; line-height:1.1; }
-.tracker-header .season { font-size:12px; color:rgba(255,255,255,0.75); letter-spacing:1px; }
+.tracker-header .season { font-size:13px; color:rgba(255,255,255,0.85); letter-spacing:1px; }
 div[data-testid="stMetric"] { background:#333333; border:1px solid #444; border-radius:8px; padding:12px; }
-div[data-testid="stMetric"] label { color:#888 !important; font-size:11px !important; text-transform:uppercase; letter-spacing:1px; }
+div[data-testid="stMetric"] label { color:#888 !important; font-size:12px !important; text-transform:uppercase; letter-spacing:1px; }
 div[data-testid="stMetric"] div[data-testid="stMetricValue"] { color:#f0ece4 !important; font-size:22px !important; }
-.stTabs [data-baseweb="tab-list"] { background:#fff; border-bottom:1px solid #444; }
+.stTabs [data-baseweb="tab-list"] { background:#2b2b2b; border-bottom:1px solid #444; }
 .stTabs [data-baseweb="tab"] { color:#888; font-size:12px; letter-spacing:1.5px; text-transform:uppercase; }
 .stTabs [aria-selected="true"] { color:#e8d5a0 !important; border-bottom:2px solid #c8102e !important; }
 .stTabs [data-baseweb="tab-panel"] { background:#2b2b2b; padding-top:16px; }
@@ -51,9 +51,9 @@ div[data-testid="stFormSubmitButton"] button {
     background: linear-gradient(135deg,#c8102e,#9b0c23) !important;
     color:white !important; border:none !important; border-radius:8px !important; width:100%; font-weight:600;
 }
-.stButton button { background:#333333 !important; color:#888 !important; border:1px solid #555 !important; border-radius:8px !important; }
+.stButton button { background:#333333 !important; color:#aaa !important; border:1px solid #555 !important; border-radius:8px !important; }
 .stButton button:hover { border-color:#e8d5a0 !important; color:#e8d5a0 !important; }
-hr { border-color: #e0e0e0; }
+hr { border-color: #444; }
 #MainMenu {visibility:hidden;} footer {visibility:hidden;} header {visibility:hidden;}
 </style>
 """, unsafe_allow_html=True)
@@ -418,12 +418,12 @@ with tab_team:
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_players:
     def stat_cell(lbl, val, sub="", border=True):
-        br = "1px solid #1f1f1f" if border else "none"
-        return f'<div style="padding:12px 10px;text-align:center;border-right:{br}"><div style="font-size:11px;color:#888;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">{lbl}</div><div style="font-size:13px;font-weight:bold;color:#f0ece4">{val}</div><div style="font-size:11px;color:#888;margin-top:2px">{sub}</div></div>'
+        br = "1px solid #444" if border else "none"
+        return f'<div style="padding:12px 10px;text-align:center;border-right:{br}"><div style="font-size:12px;color:#888;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">{lbl}</div><div style="font-size:15px;font-weight:bold;color:#f0ece4">{val}</div><div style="font-size:12px;color:#888;margin-top:2px">{sub}</div></div>'
 
     def rate_cell(lbl, val, border=True):
-        br = "1px solid #1f1f1f" if border else "none"
-        return f'<div style="padding:10px 6px;text-align:center;border-right:{br}"><div style="font-size:11px;color:#888;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">{lbl}</div><div style="font-size:15px;font-weight:bold;color:#c8102e">{val}</div></div>'
+        br = "1px solid #444" if border else "none"
+        return f'<div style="padding:10px 6px;text-align:center;border-right:{br}"><div style="font-size:12px;color:#888;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">{lbl}</div><div style="font-size:17px;font-weight:bold;color:#e8d5a0">{val}</div></div>'
 
     for player in PLAYERS:
         pdf = log_df[log_df["player"]==player].copy()
@@ -471,20 +471,20 @@ with tab_players:
             splits_html = (
                 f'<div style="display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #444">'
                 f'<div style="padding:10px 12px;border-right:1px solid #444">'
-                f'<div style="font-size:11px;color:#888;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">vs RHP &nbsp;<span style="color:#888">({vs_r["ab"]}AB)</span></div>'
+                f'<div style="font-size:12px;color:#888;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">vs RHP &nbsp;<span style="color:#888">({vs_r["ab"]}AB)</span></div>'
                 f'<div style="display:flex;gap:12px">'
-                f'<span style="font-size:12px;color:#c8102e"><span style="font-size:11px;color:#888;text-transform:uppercase">BA </span>{vs_r["ba"]}</span>'
-                f'<span style="font-size:12px;color:#c8102e"><span style="font-size:11px;color:#888;text-transform:uppercase">OBP </span>{vs_r["obp"]}</span>'
-                f'<span style="font-size:12px;color:#c8102e"><span style="font-size:11px;color:#888;text-transform:uppercase">SLG </span>{vs_r["slg"]}</span>'
-                f'<span style="font-size:12px;color:#c8102e"><span style="font-size:11px;color:#888;text-transform:uppercase">OPS </span>{vs_r["ops"]}</span>'
+                f'<span style="font-size:13px;color:#e8d5a0"><span style="font-size:11px;color:#888;text-transform:uppercase">BA </span>{vs_r["ba"]}</span>'
+                f'<span style="font-size:13px;color:#e8d5a0"><span style="font-size:11px;color:#888;text-transform:uppercase">OBP </span>{vs_r["obp"]}</span>'
+                f'<span style="font-size:13px;color:#e8d5a0"><span style="font-size:11px;color:#888;text-transform:uppercase">SLG </span>{vs_r["slg"]}</span>'
+                f'<span style="font-size:13px;color:#e8d5a0"><span style="font-size:11px;color:#888;text-transform:uppercase">OPS </span>{vs_r["ops"]}</span>'
                 f'</div></div>'
                 f'<div style="padding:10px 12px">'
-                f'<div style="font-size:11px;color:#888;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">vs LHP &nbsp;<span style="color:#888">({vs_l["ab"]}AB)</span></div>'
+                f'<div style="font-size:12px;color:#888;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">vs LHP &nbsp;<span style="color:#888">({vs_l["ab"]}AB)</span></div>'
                 f'<div style="display:flex;gap:12px">'
-                f'<span style="font-size:12px;color:#c8102e"><span style="font-size:11px;color:#888;text-transform:uppercase">BA </span>{vs_l["ba"]}</span>'
-                f'<span style="font-size:12px;color:#c8102e"><span style="font-size:11px;color:#888;text-transform:uppercase">OBP </span>{vs_l["obp"]}</span>'
-                f'<span style="font-size:12px;color:#c8102e"><span style="font-size:11px;color:#888;text-transform:uppercase">SLG </span>{vs_l["slg"]}</span>'
-                f'<span style="font-size:12px;color:#c8102e"><span style="font-size:11px;color:#888;text-transform:uppercase">OPS </span>{vs_l["ops"]}</span>'
+                f'<span style="font-size:13px;color:#e8d5a0"><span style="font-size:11px;color:#888;text-transform:uppercase">BA </span>{vs_l["ba"]}</span>'
+                f'<span style="font-size:13px;color:#e8d5a0"><span style="font-size:11px;color:#888;text-transform:uppercase">OBP </span>{vs_l["obp"]}</span>'
+                f'<span style="font-size:13px;color:#e8d5a0"><span style="font-size:11px;color:#888;text-transform:uppercase">SLG </span>{vs_l["slg"]}</span>'
+                f'<span style="font-size:13px;color:#e8d5a0"><span style="font-size:11px;color:#888;text-transform:uppercase">OPS </span>{vs_l["ops"]}</span>'
                 f'</div></div>'
                 f'</div>'
             )
