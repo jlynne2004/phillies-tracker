@@ -413,9 +413,8 @@ with tab_team:
     ]
 
     IL_TRACKER = [
-        {"player": "Max Lazar",    "il_type": "60-Day IL", "date_in": "3/22/2026", "reason": "Strained oblique",   "earliest_return": "5/21/2026", "date_out": "TBD", "games_missed": "—"},
-        {"player": "Zach Pop",     "il_type": "15-Day IL", "date_in": "4/13/2026", "reason": "Strained calf",      "earliest_return": "4/28/2026", "date_out": "TBD", "games_missed": "—"},
         {"player": "Kyle Backhus", "il_type": "15-Day IL", "date_in": "4/27/2026", "reason": "Elbow inflammation", "earliest_return": "5/12/2026", "date_out": "TBD", "games_missed": "—"},
+        {"player": "Adolis Garcia", "il type": "60-Day IL", "date_in": "6/12/2026", "reason": "Right latissimus dorsi tear", "earliest_return": "8/11/2026", "date_out": "TBD", "games_missed": "—"},
     ]
 
     RESTRICTED = [
