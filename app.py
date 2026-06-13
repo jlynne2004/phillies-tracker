@@ -420,7 +420,7 @@ with tab_team:
     ]
 
     RESTRICTED = [
-        {"*Johan's suspension return on 6/25/2026 was derailed by his IL stint, so he's not included here since he's been added to the IL tracker*"},
+        
     ]
 
     # ── In Memoriam + IL side by side ────────────────────────────────────────
