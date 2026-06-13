@@ -76,9 +76,15 @@ li[role="option"]:hover { background:#444 !important; }
 ul[role="listbox"] { background:#333333 !important; border:1px solid #555 !important; }
 
 /* ── Radio buttons ── */
+div[data-testid="stRadio"] { background:transparent !important; }
 div[data-testid="stRadio"] label { color:#f0ece4 !important; }
+div[data-testid="stRadio"] label p { color:#f0ece4 !important; }
+div[data-testid="stRadio"] > div { background:transparent !important; gap:12px !important; }
+div[role="radiogroup"] { background:transparent !important; }
 div[role="radiogroup"] label { color:#f0ece4 !important; }
+div[role="radiogroup"] label p { color:#f0ece4 !important; }
 div[role="radiogroup"] > label > div:first-child { background:#333 !important; border-color:#555 !important; }
+div[role="radiogroup"] > label > div:first-child > div { background:#c8102e !important; }
 
 /* ── Text inputs ── */
 div[data-testid="stTextInput"] input { background:#333333 !important; color:#f0ece4 !important; border:1px solid #555 !important; border-radius:8px !important; }
