@@ -410,6 +410,7 @@ with tab_team:
     MEMORIAM = [
         {"player": "Taijuan Walker", "date": "4/23/2026", "fate": "DFA'd", "epitaph": "The front office's offseason negligence became his burden to carry. He didn't ask for this. Good luck Taijuan."},
         {"player": "Rob Thomson", "date": "4/28/2026", "fate": "Fired", "epitaph": "Scapegoat for the sins of the front office. May he find peace and redemption in his next managerial role."},
+        {"player": "Zach Pop", "date": "5/30/2026", "fate": "DFA'd", "epitaph": "All out of minor league options, Zach popped off and elected free agency. He's now swimming with the fishes (aka the Marlins)."},
     ]
 
     IL_TRACKER = [
@@ -419,7 +420,7 @@ with tab_team:
     ]
 
     RESTRICTED = [
-        {"player": "Johan Rojas", "date_in": "3/16/2026", "reason": "80-game PED suspension", "earliest_return": "6/25/2026"},
+        {"*Johan's suspension return on 6/25/2026 was derailed by his IL stint, so he's not included here since he's been added to the IL tracker*"},
     ]
 
     # ── In Memoriam + IL side by side ────────────────────────────────────────
