@@ -45,8 +45,8 @@ LOG_PATH     = "data/game_log.csv"
 LOG_COLS = [
     "player","date","opponent","home_away",
     "pa","ab","hits","doubles","triples","hr","bb","hbp","sf","r","rbi",
-    "pa_vs_r","ab_vs_r","h_vs_r","hr_vs_r","bb_vs_r","hbp_vs_r","sf_vs_r",
-    "pa_vs_l","ab_vs_l","h_vs_l","hr_vs_l","bb_vs_l","hbp_vs_l","sf_vs_l",
+    "pa_vs_r","ab_vs_r","h_vs_r","2b_vs_r","3b_vs_r","hr_vs_r","bb_vs_r","hbp_vs_r","sf_vs_r",
+    "pa_vs_l","ab_vs_l","h_vs_l","2b_vs_l","3b_vs_l","hr_vs_l","bb_vs_l","hbp_vs_l","sf_vs_l",
     "team_h","team_ab",
 ]
 
@@ -73,7 +73,7 @@ def save_log(df):
 def hand_stats(hand_df):
     """Aggregate counting stats for a subset of PA rows (filtered by pitcher hand)."""
     if hand_df.empty:
-        return {"pa":0,"ab":0,"h":0,"hr":0,"bb":0,"hbp":0,"sf":0}
+        return {"pa":0,"ab":0,"h":0,"2b":0,"3b":0,"hr":0,"bb":0,"hbp":0,"sf":0}
     ev    = hand_df["events"].str.lower()
     h_bb  = int((ev == "walk").sum())
     h_hbp = int((ev == "hit_by_pitch").sum())
@@ -82,8 +82,10 @@ def hand_stats(hand_df):
     h_pa  = len(hand_df)
     h_ab  = h_pa - h_bb - h_hbp - h_sf - h_sb
     h_h   = int((ev.isin(["single","double","triple","home_run"])).sum())
+    h_2b  = int((ev == "double").sum())
+    h_3b  = int((ev == "triple").sum())
     h_hr  = int((ev == "home_run").sum())
-    return {"pa":h_pa,"ab":h_ab,"h":h_h,"hr":h_hr,"bb":h_bb,"hbp":h_hbp,"sf":h_sf}
+    return {"pa":h_pa,"ab":h_ab,"h":h_h,"2b":h_2b,"3b":h_3b,"hr":h_hr,"bb":h_bb,"hbp":h_hbp,"sf":h_sf}
 
 
 # ── FETCH FUNCTIONS ───────────────────────────────────────────────────────────
@@ -161,8 +163,10 @@ def fetch_player(name, player_id, start_date, end_date):
             "r":          r,
             "rbi":        rbi,
             "pa_vs_r":    vs_r["pa"],  "ab_vs_r":   vs_r["ab"],  "h_vs_r":   vs_r["h"],
+            "2b_vs_r":    vs_r["2b"],  "3b_vs_r":   vs_r["3b"],
             "hr_vs_r":    vs_r["hr"],  "bb_vs_r":   vs_r["bb"],  "hbp_vs_r": vs_r["hbp"], "sf_vs_r": vs_r["sf"],
             "pa_vs_l":    vs_l["pa"],  "ab_vs_l":   vs_l["ab"],  "h_vs_l":   vs_l["h"],
+            "2b_vs_l":    vs_l["2b"],  "3b_vs_l":   vs_l["3b"],
             "hr_vs_l":    vs_l["hr"],  "bb_vs_l":   vs_l["bb"],  "hbp_vs_l": vs_l["hbp"], "sf_vs_l": vs_l["sf"],
             "team_h":     0,
             "team_ab":    0,

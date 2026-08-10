@@ -24,7 +24,7 @@ def headshot_url(player):
 
 LOG_PATH    = "data/game_log.csv"
 RECORD_PATH = "data/team_record.csv"
-LOG_COLS    = ["player","date","opponent","home_away","pa","ab","hits","doubles","triples","hr","bb","hbp","sf","r","rbi","pa_vs_r","ab_vs_r","h_vs_r","hr_vs_r","bb_vs_r","hbp_vs_r","sf_vs_r","pa_vs_l","ab_vs_l","h_vs_l","hr_vs_l","bb_vs_l","hbp_vs_l","sf_vs_l","team_h","team_ab"]
+LOG_COLS    = ["player","date","opponent","home_away","pa","ab","hits","doubles","triples","hr","bb","hbp","sf","r","rbi","pa_vs_r","ab_vs_r","h_vs_r","2b_vs_r","3b_vs_r","hr_vs_r","bb_vs_r","hbp_vs_r","sf_vs_r","pa_vs_l","ab_vs_l","h_vs_l","2b_vs_l","3b_vs_l","hr_vs_l","bb_vs_l","hbp_vs_l","sf_vs_l","team_h","team_ab"]
 
 # ── CSS ──────────────────────────────────────────────────────────────────────
 st.markdown("""
@@ -135,8 +135,8 @@ def load_log():
                 df[col] = 0 if col not in ["home_away","opponent","player","date"] else ""
         df["date"] = pd.to_datetime(df["date"]).dt.date
         int_cols = ["pa","ab","hits","doubles","triples","hr","bb","hbp","sf","r","rbi",
-                    "pa_vs_r","ab_vs_r","h_vs_r","hr_vs_r","bb_vs_r","hbp_vs_r","sf_vs_r",
-                    "pa_vs_l","ab_vs_l","h_vs_l","hr_vs_l","bb_vs_l","hbp_vs_l","sf_vs_l",
+                    "pa_vs_r","ab_vs_r","h_vs_r","2b_vs_r","3b_vs_r","hr_vs_r","bb_vs_r","hbp_vs_r","sf_vs_r",
+                    "pa_vs_l","ab_vs_l","h_vs_l","2b_vs_l","3b_vs_l","hr_vs_l","bb_vs_l","hbp_vs_l","sf_vs_l",
                     "team_h","team_ab"]
         for col in int_cols:
             df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0).astype(int)
@@ -195,9 +195,9 @@ def calc_streak(pdf):
 
 def calc_hand_splits(df):
     """Calculate BA, OBP, SLG, OPS vs R and vs L pitchers."""
-    def splits(ab, h, hr, bb, hbp, sf):
-        singles = h - hr  # simplified: no 2B/3B split by hand stored
-        tb = singles + 4 * hr  # simplified total bases
+    def splits(ab, h, d, t, hr, bb, hbp, sf):
+        singles = h - d - t - hr
+        tb = singles + 2*d + 3*t + 4*hr
         obp_d = ab + bb + hbp + sf
         ba_r  = h/ab if ab > 0 else 0
         obp_r = (h+bb+hbp)/obp_d if obp_d > 0 else 0
@@ -209,12 +209,16 @@ def calc_hand_splits(df):
         empty = {"ab":0,"h":0,"hr":0,"bb":0,"ba":".000","obp":".000","slg":".000","ops":".000"}
         return empty, empty
     vs_r = splits(
-        int(df["ab_vs_r"].sum()), int(df["h_vs_r"].sum()), int(df["hr_vs_r"].sum()),
-        int(df["bb_vs_r"].sum()), int(df["hbp_vs_r"].sum()), int(df["sf_vs_r"].sum())
+        int(df["ab_vs_r"].sum()), int(df["h_vs_r"].sum()),
+        int(df["2b_vs_r"].sum()), int(df["3b_vs_r"].sum()),
+        int(df["hr_vs_r"].sum()), int(df["bb_vs_r"].sum()),
+        int(df["hbp_vs_r"].sum()), int(df["sf_vs_r"].sum())
     )
     vs_l = splits(
-        int(df["ab_vs_l"].sum()), int(df["h_vs_l"].sum()), int(df["hr_vs_l"].sum()),
-        int(df["bb_vs_l"].sum()), int(df["hbp_vs_l"].sum()), int(df["sf_vs_l"].sum())
+        int(df["ab_vs_l"].sum()), int(df["h_vs_l"].sum()),
+        int(df["2b_vs_l"].sum()), int(df["3b_vs_l"].sum()),
+        int(df["hr_vs_l"].sum()), int(df["bb_vs_l"].sum()),
+        int(df["hbp_vs_l"].sum()), int(df["sf_vs_l"].sum())
     )
     return vs_r, vs_l
     if d is None: return "—"
@@ -410,17 +414,16 @@ with tab_team:
     MEMORIAM = [
         {"player": "Taijuan Walker", "date": "4/23/2026", "fate": "DFA'd", "epitaph": "The front office's offseason negligence became his burden to carry. He didn't ask for this. Good luck Taijuan."},
         {"player": "Rob Thomson", "date": "4/28/2026", "fate": "Fired", "epitaph": "Scapegoat for the sins of the front office. May he find peace and redemption in his next managerial role."},
-        {"player": "Zach Pop", "date": "5/30/2026", "fate": "DFA'd", "epitaph": "All out of minor league options, Zach popped off and elected free agency. He's now swimming with the fishes (aka the Marlins)."},
     ]
 
     IL_TRACKER = [
+        {"player": "Max Lazar",    "il_type": "60-Day IL", "date_in": "3/22/2026", "reason": "Strained oblique",   "earliest_return": "5/21/2026", "date_out": "TBD", "games_missed": "—"},
+        {"player": "Zach Pop",     "il_type": "15-Day IL", "date_in": "4/13/2026", "reason": "Strained calf",      "earliest_return": "4/28/2026", "date_out": "TBD", "games_missed": "—"},
         {"player": "Kyle Backhus", "il_type": "15-Day IL", "date_in": "4/27/2026", "reason": "Elbow inflammation", "earliest_return": "5/12/2026", "date_out": "TBD", "games_missed": "—"},
-        {"player": "Adolis Garcia", "il_type": "60-Day IL", "date_in": "6/12/2026", "reason": "Right latissimus dorsi tear", "earliest_return": "8/11/2026", "date_out": "TBD", "games_missed": "—"},
-        {"player": "Johan Rojas", "il_type": "60-Day IL", "date_in": "6/10/2026", "reason": "UCL tear", "earliest_return": "~03/10/2027", "date_out": "TBD", "games_missed": "—"},
     ]
 
     RESTRICTED = [
-        
+        {"player": "Johan Rojas", "date_in": "3/16/2026", "reason": "80-game PED suspension", "earliest_return": "~6/15/2026"},
     ]
 
     # ── In Memoriam + IL side by side ────────────────────────────────────────
